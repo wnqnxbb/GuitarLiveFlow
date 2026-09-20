@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { useLocalStorage } from '../lib/hooks';
 
 export function HomePage() {
   const [count, setCount] = useState<number | null>(null);
-  const [roomCode, setRoomCode] = useLocalStorage('roomCode', 'stage');
   useEffect(() => {
     api.listSongs().then((s) => setCount(s.length)).catch(() => setCount(0));
   }, []);
@@ -22,7 +20,7 @@ export function HomePage() {
         <Link to="/display" className="card">
           <span className="card__icon">🖥</span>
           <span className="card__title">大屏歌词</span>
-          <span className="card__desc">投影/电视上打开，只显示歌词</span>
+          <span className="card__desc">从手机演出页生成链接后打开</span>
         </Link>
         <Link to="/practice" className="card">
           <span className="card__icon">🎸</span>
@@ -35,11 +33,6 @@ export function HomePage() {
           <span className="card__desc">{count === null ? '…' : `共 ${count} 首`}</span>
         </Link>
       </div>
-      <label className="home__room">
-        房间码
-        <input className="input" value={roomCode} onChange={(e) => setRoomCode(e.target.value.trim() || 'stage')} />
-        <span className="hint">手机和大屏要用同一个房间码，与服务器 ROOM_CODE 一致</span>
-      </label>
     </div>
   );
 }

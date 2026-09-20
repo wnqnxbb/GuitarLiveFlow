@@ -12,18 +12,25 @@ export interface RoomConnection {
 }
 
 /**
- * 连接到演出房间的 WebSocket。
+ * 连接到某个歌曲的演出房间。
  * 控制端调用 send 修改状态，大屏端只读；断线自动重连，重连后服务器会推送最新状态。
+ * code 为 null 时不连接（例如手机还没选歌）。
  */
-export function useRoom(code: string, role: ClientRole): RoomConnection {
+export function useRoom(code: string | null, role: ClientRole): RoomConnection {
   const [state, setState] = useState<RoomState>(DEFAULT_ROOM_STATE);
   const [connected, setConnected] = useState(false);
   const [presence, setPresence] = useState({ controllers: 0, displays: 0 });
   const [songVersion, setSongVersion] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const pendingRef = useRef<Partial<RoomState> | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
+    if (!code) {
+      setConnected(false);
+      return;
+    }
     let closed = false;
     let retry = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -37,8 +44,12 @@ export function useRoom(code: string, role: ClientRole): RoomConnection {
       ws.onopen = () => {
         retry = 0;
         setConnected(true);
-        // 控制端断线期间的最后一次修改，重连后补发
-        if (pendingRef.current) {
+        if (role === 'controller') {
+          // 控制端是唯一写入方：连接/重连后把本地完整状态重新广播，
+          // 避免服务器上残留的旧状态把手机覆盖掉
+          pendingRef.current = null;
+          ws.send(JSON.stringify({ type: 'state', state: stateRef.current }));
+        } else if (pendingRef.current) {
           ws.send(JSON.stringify({ type: 'state', state: pendingRef.current }));
           pendingRef.current = null;
         }

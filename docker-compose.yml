@@ -4,7 +4,6 @@ services:
     restart: unless-stopped
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
-      ROOM_CODE: ${ROOM_CODE:-stage}
       PORT: 3000
     volumes:
       - ./data:/data

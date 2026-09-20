@@ -11,6 +11,9 @@ import { broadcastAll, getRoom, markAlive, startHeartbeat } from './room.js';
 import { parseChordPro } from '../../shared/chordpro.js';
 import type { ClientMessage, ClientRole } from '../../shared/types.js';
 
+/** 同步房间号：每首歌一个房间，形如 song-12，由客户端按歌曲 id 生成 */
+const ROOM_KEY_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
 function songInputFromBody(body: unknown): SongInput | null {
   if (!body || typeof body !== 'object') return null;
   const b = body as Record<string, unknown>;
@@ -146,7 +149,7 @@ export async function registerRoutes(app: FastifyInstance) {
 
   /* ---------- 房间状态（HTTP 兜底） ---------- */
   app.get<{ Params: { code: string } }>('/api/rooms/:code/state', async (req, reply) => {
-    if (req.params.code !== config.roomCode) return reply.code(404).send({ error: '房间码不对' });
+    if (!ROOM_KEY_RE.test(req.params.code)) return reply.code(404).send({ error: '房间不存在' });
     return getRoom(req.params.code).state;
   });
 
@@ -155,8 +158,8 @@ export async function registerRoutes(app: FastifyInstance) {
     '/ws/rooms/:code',
     { websocket: true },
     (socket, req) => {
-      if (req.params.code !== config.roomCode) {
-        socket.close(4004, '房间码不对');
+      if (!ROOM_KEY_RE.test(req.params.code)) {
+        socket.close(4004, '房间不存在');
         return;
       }
       const role: ClientRole = req.query.role === 'controller' ? 'controller' : 'display';

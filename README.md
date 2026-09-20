@@ -6,12 +6,14 @@
 
 | 页面 | 地址 | 用途 |
 | --- | --- | --- |
-| 手机演出 | `/perform` | 控制端。和弦 + 歌词，点屏幕下方下一行、上方上一行，每次换行广播给大屏 |
-| 大屏歌词 | `/display` | 只读。当前句居中放大，前后句变淡，双击全屏，鼠标不动自动隐藏控件 |
+| 手机演出 | `/perform` | 控制端。和弦 + 歌词，点屏幕下方下一行、上方上一行，每次换行广播给大屏。选好歌后点顶栏的 `🖵` 生成大屏二维码和链接 |
+| 大屏歌词 | `/display/:id` | 只读。当前句居中放大，前后句变淡，双击全屏，鼠标不动自动隐藏控件 |
 | 电脑练习 | `/practice` | 本地控制，不广播。可并排显示原谱图片，或把多张原谱横向平铺铺满整屏（按 T 切换），支持移调、自动滚动 |
 | 谱子管理 | `/admin` | 需要管理员密码。ChordPro 编辑器带实时预览，可上传原图 |
 
-手机和大屏要用同一个「房间码」，与服务器的 `ROOM_CODE` 一致，默认 `stage`。
+大屏链接跟着歌曲走：手机选好歌后点顶栏 `🖵`，弹窗里会出现这首歌的二维码和链接（形如
+`https://你的域名/display/12`）。在大屏/投影上打开这个链接就能同步翻行，链接右侧可一键复制。
+同一首歌的多个大屏和手机会连到同一个同步房间，不需要再手动填房间码。
 
 ## 谱子格式（ChordPro）
 
@@ -54,7 +56,7 @@ npm run dev               # 后端 :3000，前端 :5173
 ```bash
 git clone https://github.com/wnqnxbb/GuitarLiveFlow.git && cd GuitarLiveFlow
 cp .env.example .env
-# 编辑 .env：ADMIN_PASSWORD、ROOM_CODE、DOMAIN
+# 编辑 .env：ADMIN_PASSWORD、DOMAIN
 docker compose up -d --build
 ```
 

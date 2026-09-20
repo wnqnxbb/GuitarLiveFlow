@@ -1,4 +1,4 @@
-import type { RoomState, SongDetail, SongImage, SongSummary } from '@shared/types';
+import type { SongDetail, SongImage, SongSummary } from '@shared/types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -47,6 +47,4 @@ export const api = {
   },
   deleteImage: (songId: number, imageId: number) =>
     request<{ ok: true }>(`/api/songs/${songId}/images/${imageId}`, { method: 'DELETE' }),
-
-  roomState: (code: string) => request<RoomState>(`/api/rooms/${encodeURIComponent(code)}/state`),
 };

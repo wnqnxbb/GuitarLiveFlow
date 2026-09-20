@@ -12,6 +12,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/perform" element={<PerformPage />} />
         <Route path="/display" element={<DisplayPage />} />
+        <Route path="/display/:id" element={<DisplayPage />} />
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/practice/:id" element={<PracticePage />} />
         <Route path="/admin" element={<AdminPage />} />

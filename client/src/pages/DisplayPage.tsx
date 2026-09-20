@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { LyricsStage } from '../components/LyricsStage';
 import { useRoom } from '../lib/useRoom';
 import { useFullscreen, useSong, useWakeLock } from '../lib/hooks';
-import { useRoomCode } from '../lib/roomCode';
 
 /**
  * 大屏歌词页：只读，跟随手机端状态。
+ * 歌曲由链接里的 /display/:id 决定；同一首歌的链接共享一个同步房间。
  * 鼠标不动几秒后隐藏所有控件。
  */
 export function DisplayPage() {
-  const roomCode = useRoomCode();
-  const room = useRoom(roomCode, 'display');
-  const { parsed, song } = useSong(room.state.songId, room.songVersion);
+  const params = useParams<{ id?: string }>();
+  const songId = params.id && /^\d+$/.test(params.id) ? Number(params.id) : null;
+  const room = useRoom(songId === null ? null : `song-${songId}`, 'display');
+  const { parsed, song } = useSong(songId, room.songVersion);
   const { isFullscreen, toggle } = useFullscreen();
   const [showUi, setShowUi] = useState(true);
   useWakeLock(true);
@@ -32,6 +33,21 @@ export function DisplayPage() {
       window.removeEventListener('keydown', onMove);
     };
   }, []);
+
+  if (songId === null) {
+    return (
+      <div className="page page--stage">
+        <div className="stage stage--idle">
+          <p className="hint">请从手机「演出」页选好歌后点「🖥」获取大屏链接</p>
+        </div>
+        <div className="stage__ui">
+          <Link to="/" className="btn btn--ghost">
+            ← 首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page page--stage" onDoubleClick={toggle}>

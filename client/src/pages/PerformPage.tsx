@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChordSheet } from '../components/ChordSheet';
 import { SongPicker } from '../components/SongPicker';
+import { DisplayLinkDialog } from '../components/DisplayLinkDialog';
 import { useRoom } from '../lib/useRoom';
 import {
   useAutoAdvance,
@@ -13,7 +14,6 @@ import {
   useTransposed,
   useWakeLock,
 } from '../lib/hooks';
-import { useRoomCode } from '../lib/roomCode';
 
 /**
  * 手机演出页：控制端。
@@ -21,15 +21,18 @@ import { useRoomCode } from '../lib/roomCode';
  * 每次换行都通过 WebSocket 广播给大屏。
  */
 export function PerformPage() {
-  const roomCode = useRoomCode();
-  const room = useRoom(roomCode, 'controller');
+  // 手机端是状态的唯一来源：本地保存当前歌曲，用歌曲 id 确定同步房间
+  const [songId, setSongId] = useState<number | null>(null);
+  const roomKey = songId === null ? null : `song-${songId}`;
+  const room = useRoom(roomKey, 'controller');
   const { state, send } = room;
-  const { song, parsed } = useSong(state.songId, room.songVersion);
+  const { song, parsed } = useSong(songId, room.songVersion);
   const sheet = useTransposed(parsed, state.transpose);
 
   const [fontSize, setFontSize] = useLocalStorage('perform.fontSize', 22);
-  const [showPicker, setShowPicker] = useState(state.songId === null);
+  const [showPicker, setShowPicker] = useState(true);
   const [showTools, setShowTools] = useState(false);
+  const [showDisplayLink, setShowDisplayLink] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeActive = useWakeLock(true);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
@@ -54,8 +57,8 @@ export function PerformPage() {
 
   // 切歌后自动关掉选歌面板
   useEffect(() => {
-    if (state.songId !== null) setShowPicker(false);
-  }, [state.songId]);
+    if (songId !== null) setShowPicker(false);
+  }, [songId]);
 
   const onTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (showTools) {
@@ -79,9 +82,12 @@ export function PerformPage() {
           <span className={`dot ${room.connected ? 'is-on' : ''}`} title={room.connected ? '已连接' : '未连接'} />
         </header>
         <SongPicker
-          value={state.songId}
-          onChange={(id) => send({ songId: id, lineIndex: 0, mode: 'manual' })}
-          onClose={state.songId !== null ? () => setShowPicker(false) : undefined}
+          value={songId}
+          onChange={(id) => {
+            setSongId(id);
+            send({ songId: id, lineIndex: 0, mode: 'manual' });
+          }}
+          onClose={songId !== null ? () => setShowPicker(false) : undefined}
         />
       </div>
     );
@@ -101,6 +107,11 @@ export function PerformPage() {
         <span className="bar__status">
           <span className={`dot ${room.connected ? 'is-on' : ''}`} title={room.connected ? '已连接' : '未连接'} />
           <span className="bar__displays" title="在线大屏数">{room.displays} 屏</span>
+          {songId !== null && (
+            <button className="btn btn--ghost" onClick={() => setShowDisplayLink(true)} title="大屏链接">
+              🖥
+            </button>
+          )}
           <button className="btn btn--ghost" onClick={() => setShowTools((v) => !v)}>
             ⚙
           </button>
@@ -115,6 +126,10 @@ export function PerformPage() {
         )}
         <div className="perform__spacer" />
       </div>
+
+      {showDisplayLink && songId !== null && (
+        <DisplayLinkDialog songId={songId} songTitle={song?.title} onClose={() => setShowDisplayLink(false)} />
+      )}
 
       {showTools && (
         <div className="tools" onClick={(e) => e.stopPropagation()}>

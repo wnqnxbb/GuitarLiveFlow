@@ -3,7 +3,7 @@ import { DEFAULT_ROOM_STATE, type ClientRole, type RoomState, type ServerMessage
 
 /**
  * 演出房间：服务器内存里保存最新状态，控制端写入，大屏端只读。
- * 个人使用只需要一个房间，但按房间码分开存，方便以后扩展多个房间。
+ * 每首歌一个房间（键形如 song-12），这样同一首歌的多个大屏和手机共享同一份翻行状态。
  */
 class Room {
   state: RoomState = { ...DEFAULT_ROOM_STATE };

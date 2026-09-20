@@ -31,7 +31,7 @@ export function useTransposed(parsed: ParsedSong | null, semitones: number) {
   return useMemo(() => (parsed ? transposeSong(parsed, semitones) : null), [parsed, semitones]);
 }
 
-/** 持久化到 localStorage 的状态，用于字号、房间码等偏好 */
+/** 持久化到 localStorage 的状态，用于字号等偏好 */
 export function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
     try {

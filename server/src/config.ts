@@ -29,7 +29,6 @@ export const config = {
   port: Number.parseInt(process.env.PORT ?? '3000', 10),
   host: process.env.HOST ?? '0.0.0.0',
   adminPassword: process.env.ADMIN_PASSWORD ?? 'change-me',
-  roomCode: process.env.ROOM_CODE ?? 'stage',
   dataDir,
   uploadsDir: path.join(dataDir, 'uploads'),
   dbFile: path.join(dataDir, 'guitar.db'),
