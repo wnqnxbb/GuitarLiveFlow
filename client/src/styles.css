@@ -105,6 +105,29 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 .picker__title { font-size: 18px; font-weight: 600; }
 .picker__meta { color: var(--muted); font-size: 13px; }
 .picker__empty { color: var(--muted); padding: 24px; text-align: center; }
+/* 电脑练习页：卡片宫格 */
+.picker__gallery {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; align-content: start;
+  padding: 0 12px calc(12px + var(--safe-bottom));
+}
+.picker__gallery .picker__empty { grid-column: 1 / -1; }
+.song-card {
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left;
+  background: var(--card); border: 1px solid var(--border); color: var(--fg);
+  border-radius: 14px; padding: 16px; min-height: 104px; cursor: pointer;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.song-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0, 0, 0, .08); }
+.song-card.is-active { border-color: var(--accent); background: var(--active-bg); }
+.song-card__title { font-size: 18px; font-weight: 700; }
+.song-card__artist { color: var(--muted); font-size: 13px; }
+.song-card__tags { margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.song-card__tags em {
+  font-style: normal; font-size: 12px; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+}
 
 /* ---- 和弦歌词谱 ---- */
 .sheet { padding: 8px 16px; font-size: var(--sheet-font); line-height: 1.35; }

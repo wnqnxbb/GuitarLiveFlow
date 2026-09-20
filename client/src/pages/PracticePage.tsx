@@ -44,7 +44,7 @@ export function PracticePage() {
           </Link>
           <span className="bar__title">练习：选择歌曲</span>
         </header>
-        <SongPicker value={null} onChange={(id) => (setSongId(id), setLine(0))} />
+        <SongPicker value={null} onChange={(id) => (setSongId(id), setLine(0))} variant="cards" />
       </div>
     );
   }
