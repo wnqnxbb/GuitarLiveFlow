@@ -1,5 +1,5 @@
 import type { WebSocket } from 'ws';
-import { DEFAULT_ROOM_STATE, type ClientRole, type RoomState, type ServerMessage } from '../../shared/types.js';
+import { DEFAULT_ROOM_STATE, isStageStyle, type ClientRole, type RoomState, type ServerMessage } from '../../shared/types.js';
 
 /**
  * 演出房间：服务器内存里保存最新状态，控制端写入，大屏端只读。
@@ -85,6 +85,7 @@ function sanitize(patch: Partial<RoomState>): Partial<RoomState> {
   if (patch.mode === 'manual' || patch.mode === 'auto') out.mode = patch.mode;
   if (typeof patch.secondsPerLine === 'number' && patch.secondsPerLine > 0) out.secondsPerLine = Math.min(60, patch.secondsPerLine);
   if (typeof patch.transpose === 'number' && Number.isInteger(patch.transpose)) out.transpose = Math.max(-11, Math.min(11, patch.transpose));
+  if (isStageStyle(patch.stageStyle)) out.stageStyle = patch.stageStyle;
   return out;
 }
 

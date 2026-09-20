@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { STAGE_STYLES } from '@shared/types';
 import { ChordSheet } from '../components/ChordSheet';
 import { SongPicker } from '../components/SongPicker';
 import { DisplayLinkDialog } from '../components/DisplayLinkDialog';
@@ -175,6 +176,19 @@ export function PerformPage() {
             <button className="btn" onClick={() => send({ secondsPerLine: Math.min(60, state.secondsPerLine + 1) })}>
               慢
             </button>
+          </div>
+          <div className="tools__row">
+            <span>大屏样式</span>
+            {STAGE_STYLES.map((s) => (
+              <button
+                key={s.id}
+                className={`btn ${state.stageStyle === s.id ? 'btn--primary' : ''}`}
+                onClick={() => send({ stageStyle: s.id })}
+                title={s.desc}
+              >
+                {s.name}
+              </button>
+            ))}
           </div>
           <div className="tools__row">
             <button className="btn" onClick={() => setLine(0)}>

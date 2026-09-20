@@ -51,7 +51,12 @@ export function DisplayPage() {
 
   return (
     <div className="page page--stage" onDoubleClick={toggle}>
-      <LyricsStage song={parsed} activeIndex={room.state.lineIndex} title={song?.title} />
+      <LyricsStage
+        song={parsed}
+        activeIndex={room.state.lineIndex}
+        title={song?.title}
+        variant={room.state.stageStyle}
+      />
       <div className={`stage__ui ${showUi ? '' : 'is-hidden'}`}>
         <Link to="/" className="btn btn--ghost">
           ← 首页
