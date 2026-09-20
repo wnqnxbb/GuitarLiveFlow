@@ -16,6 +16,7 @@ class Room {
   }
 
   leave(ws: WebSocket) {
+    if (!this.clients.has(ws)) return;
     this.clients.delete(ws);
     this.broadcastPresence();
   }
@@ -47,6 +48,34 @@ class Room {
     for (const role of this.clients.values()) role === 'controller' ? controllers++ : displays++;
     this.broadcast({ type: 'presence', controllers, displays });
   }
+}
+
+/** 服务端心跳：30 秒 ping 一次，两轮没回 pong 就判定断线踢出，防止手机断网后僵尸连接虚报在线数 */
+const HEARTBEAT_INTERVAL = 30_000;
+const alive = new WeakSet<WebSocket>();
+let heartbeatTimer: NodeJS.Timeout | undefined;
+
+export function startHeartbeat() {
+  if (heartbeatTimer) return;
+  heartbeatTimer = setInterval(() => {
+    for (const room of rooms.values()) {
+      for (const ws of room.clients.keys()) {
+        if (!alive.has(ws)) {
+          room.leave(ws);
+          ws.terminate();
+        } else {
+          alive.delete(ws);
+          ws.ping();
+        }
+      }
+    }
+  }, HEARTBEAT_INTERVAL);
+  heartbeatTimer.unref?.();
+}
+
+export function markAlive(ws: WebSocket) {
+  ws.on('pong', () => alive.add(ws));
+  alive.add(ws);
 }
 
 function sanitize(patch: Partial<RoomState>): Partial<RoomState> {

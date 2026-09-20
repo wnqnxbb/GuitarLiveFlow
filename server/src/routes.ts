@@ -7,7 +7,7 @@ import { createWriteStream } from 'node:fs';
 import { config } from './config.js';
 import { songsRepo, type SongInput } from './db.js';
 import { checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from './auth.js';
-import { broadcastAll, getRoom } from './room.js';
+import { broadcastAll, getRoom, markAlive, startHeartbeat } from './room.js';
 import { parseChordPro } from '../../shared/chordpro.js';
 import type { ClientMessage, ClientRole } from '../../shared/types.js';
 
@@ -27,14 +27,51 @@ function songInputFromBody(body: unknown): SongInput | null {
   };
 }
 
+/* ---------- 登录限流：同一 IP 10 分钟内最多 5 次失败，成功后清零 ---------- */
+const LOGIN_WINDOW = 10 * 60 * 1000;
+const LOGIN_MAX_FAILS = 5;
+const loginFails = new Map<string, { count: number; start: number }>();
+
+function loginBlocked(ip: string): boolean {
+  const rec = loginFails.get(ip);
+  if (!rec || Date.now() - rec.start > LOGIN_WINDOW) return false;
+  return rec.count >= LOGIN_MAX_FAILS;
+}
+
+function recordLoginFail(ip: string): void {
+  const now = Date.now();
+  const rec = loginFails.get(ip);
+  if (!rec || now - rec.start > LOGIN_WINDOW) {
+    loginFails.set(ip, { count: 1, start: now });
+  } else {
+    rec.count += 1;
+  }
+  // 顺带清理过期记录，避免 Map 无限增长
+  if (loginFails.size > 500) {
+    for (const [key, r] of loginFails) {
+      if (now - r.start > LOGIN_WINDOW) loginFails.delete(key);
+    }
+  }
+}
+
+function clearLoginFails(ip: string): void {
+  loginFails.delete(ip);
+}
+
 export async function registerRoutes(app: FastifyInstance) {
   /* ---------- 登录 ---------- */
   app.get('/api/me', async (req) => ({ admin: isAdmin(req) }));
 
   app.post<{ Body: { password?: string } }>('/api/login', async (req, reply) => {
+    const ip = req.ip;
+    if (loginBlocked(ip)) {
+      return reply.code(429).send({ error: '尝试次数过多，请十分钟后再试' });
+    }
     if (!checkPassword(req.body?.password ?? '')) {
+      recordLoginFail(ip);
       return reply.code(401).send({ error: '密码不对' });
     }
+    clearLoginFails(ip);
     setAdminCookie(reply);
     return { admin: true };
   });
@@ -124,6 +161,7 @@ export async function registerRoutes(app: FastifyInstance) {
       }
       const role: ClientRole = req.query.role === 'controller' ? 'controller' : 'display';
       const room = getRoom(req.params.code);
+      markAlive(socket);
       room.join(socket, role);
 
       socket.on('message', (raw) => {

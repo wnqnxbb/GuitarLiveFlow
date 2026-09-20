@@ -13,15 +13,28 @@ const seedDir = [2, 3, 4, 5]
 
 /** 首次启动时把 seed 目录下的 .cho 文件和同名图片导入数据库 */
 export function seedIfEmpty() {
-  if (!seedDir) return;
   if (songsRepo.count() > 0) return;
+  seedMissing();
+}
+
+/**
+ * 导入 seed 目录里「数据库还没有的」歌曲，按标题去重，可安全重复执行。
+ * 返回本次导入的数量。
+ */
+export function seedMissing(): number {
+  if (!seedDir) return 0;
+  const existing = new Set(songsRepo.list().map((s) => s.title));
+  let imported = 0;
   for (const file of fs.readdirSync(seedDir)) {
     if (!file.endsWith('.cho')) continue;
     const chordpro = fs.readFileSync(path.join(seedDir, file), 'utf8');
     const base = path.basename(file, '.cho');
     const meta = parseChordPro(chordpro).meta;
+    const title = meta.title || base;
+    // 已经被改过名或用管理页删过的歌不重复导入
+    if (existing.has(title)) continue;
     const song = songsRepo.create({
-      title: meta.title || base,
+      title,
       artist: meta.subtitle ?? '',
       key: meta.key ?? '',
       capo: meta.capo ?? 0,
@@ -33,12 +46,15 @@ export function seedIfEmpty() {
       fs.copyFileSync(path.join(seedDir, img), path.join(config.uploadsDir, target));
       songsRepo.addImage(song.id, target);
     }
+    existing.add(title);
+    imported += 1;
     console.log(`已导入示例歌曲: ${base}`);
   }
+  return imported;
 }
 
-// 直接运行 `npm run seed` 时执行
+// 直接运行 `npm run seed` 时执行：把 seed 里新增、数据库里还没有的歌补进来
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  seedIfEmpty();
-  console.log(`当前共 ${songsRepo.count()} 首歌`);
+  const n = seedMissing();
+  console.log(`本次导入 ${n} 首，当前共 ${songsRepo.count()} 首歌`);
 }

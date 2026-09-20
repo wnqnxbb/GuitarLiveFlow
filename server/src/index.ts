@@ -7,10 +7,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
 import { registerRoutes } from './routes.js';
+import { startHeartbeat } from './room.js';
 import { songsRepo } from './db.js';
 import { seedIfEmpty } from './seed.js';
 
-const app = Fastify({ logger: { level: config.isProd ? 'info' : 'debug' } });
+// 反代（Caddy）后取 X-Forwarded-For 里的真实客户端 IP，登录限流按它计数
+const app = Fastify({ trustProxy: true, logger: { level: config.isProd ? 'info' : 'debug' } });
 
 await app.register(fastifyCookie);
 await app.register(fastifyMultipart, { limits: { fileSize: 20 * 1024 * 1024, files: 1 } });
@@ -25,20 +27,47 @@ await app.register(fastifyStatic, {
 });
 
 await registerRoutes(app);
+startHeartbeat();
 
 // 生产环境：托管前端构建产物，未知路径回退到 index.html 交给前端路由
-if (fs.existsSync(path.join(config.clientDist, 'index.html'))) {
+const indexPath = path.join(config.clientDist, 'index.html');
+if (fs.existsSync(indexPath)) {
+  let indexHtml: Buffer | null = null;
+  let indexMtimeMs = 0;
+  // index.html 带缓存读取，文件变了重新读；回退响应不会发旧内容
+  const getIndexHtml = (): Buffer | null => {
+    try {
+      const stat = fs.statSync(indexPath);
+      if (!indexHtml || stat.mtimeMs !== indexMtimeMs) {
+        indexHtml = fs.readFileSync(indexPath);
+        indexMtimeMs = stat.mtimeMs;
+      }
+    } catch {
+      /* 文件被删则沿用上一次缓存 */
+    }
+    return indexHtml;
+  };
+
   await app.register(fastifyStatic, {
     root: config.clientDist,
     prefix: '/',
     wildcard: false,
-    maxAge: '1h',
+    // index.html 不缓存（发新版后必须重新校验），带哈希的资源长期缓存
+    setHeaders: (reply, filepath) => {
+      reply.header(
+        'Cache-Control',
+        filepath.endsWith('.html') ? 'no-cache' : 'public, max-age=31536000, immutable',
+      );
+    },
   });
+
   app.setNotFoundHandler((req, reply) => {
     if (req.raw.url?.startsWith('/api/') || req.raw.url?.startsWith('/ws/')) {
       return reply.code(404).send({ error: 'Not found' });
     }
-    return reply.type('text/html').send(fs.readFileSync(path.join(config.clientDist, 'index.html')));
+    const html = getIndexHtml();
+    if (!html) return reply.code(404).send({ error: 'Not found' });
+    return reply.type('text/html').header('Cache-Control', 'no-cache').send(html);
   });
 }
 

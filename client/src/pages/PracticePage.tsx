@@ -16,6 +16,7 @@ export function PracticePage() {
   const sheet = useTransposed(parsed, transpose);
   const [fontSize, setFontSize] = useLocalStorage('practice.fontSize', 20);
   const [showImage, setShowImage] = useLocalStorage('practice.showImage', true);
+  const [tile, setTile] = useLocalStorage('practice.tile', false);
   const [showLyricsOnly, setShowLyricsOnly] = useState(false);
   const [line, setLine] = useState(0);
   const [auto, setAuto] = useState(false);
@@ -26,7 +27,7 @@ export function PracticePage() {
   const go = useCallback((idx: number) => setLine(Math.max(0, Math.min(Math.max(0, total - 1), idx))), [total]);
   const next = useCallback(() => go(line + 1), [go, line]);
   const prev = useCallback(() => go(line - 1), [go, line]);
-  useKeyboardNav(next, prev);
+  useKeyboardNav(next, prev, { t: () => setTile((v) => !v) });
   useAutoAdvance(auto && total > 0, seconds, () => (line >= total - 1 ? setAuto(false) : next()));
   useScrollToActive(containerRef, line);
 
@@ -93,6 +94,11 @@ export function PracticePage() {
             {showLyricsOnly ? '显示和弦' : '只看歌词'}
           </button>
           {hasImage && (
+            <button className={`btn ${tile ? 'btn--primary' : ''}`} onClick={() => setTile((v) => !v)}>
+              平铺
+            </button>
+          )}
+          {hasImage && !tile && (
             <button className={`btn ${showImage ? 'btn--primary' : ''}`} onClick={() => setShowImage(!showImage)}>
               原图
             </button>
@@ -100,22 +106,34 @@ export function PracticePage() {
         </span>
       </header>
 
-      <div className={`practice__body ${hasImage && showImage ? 'has-image' : ''}`}>
-        <div className="practice__sheet" ref={containerRef}>
-          {sheet && (
-            <ChordSheet song={sheet} activeIndex={line} fontSize={fontSize} showChords={!showLyricsOnly} onLineClick={go} />
-          )}
-          <div className="perform__spacer" />
-        </div>
-        {hasImage && showImage && (
-          <div className="practice__images">
+      <div className={`practice__body ${tile && hasImage ? 'is-tile' : hasImage && showImage ? 'has-image' : ''}`}>
+        {tile && hasImage ? (
+          <div className="practice__tiles">
             {song!.images.map((img) => (
-              <img key={img.id} src={img.url} alt="原谱" loading="lazy" />
+              <div className="practice__tile" key={img.id}>
+                <img src={img.url} alt="原谱" loading="lazy" />
+              </div>
             ))}
           </div>
+        ) : (
+          <>
+            <div className="practice__sheet" ref={containerRef}>
+              {sheet && (
+                <ChordSheet song={sheet} activeIndex={line} fontSize={fontSize} showChords={!showLyricsOnly} onLineClick={go} />
+              )}
+              <div className="perform__spacer" />
+            </div>
+            {hasImage && showImage && (
+              <div className="practice__images">
+                {song!.images.map((img) => (
+                  <img key={img.id} src={img.url} alt="原谱" loading="lazy" />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
-      <p className="hint hint--bottom">↑↓ 或空格翻行，点击某一行直接跳转。练习页不会同步到大屏。</p>
+      <p className="hint hint--bottom">↑↓ 或空格翻行，点击某一行直接跳转。按 T 切换谱子平铺。练习页不会同步到大屏。</p>
     </div>
   );
 }
