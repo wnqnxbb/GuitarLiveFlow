@@ -5,3 +5,5 @@ data/*.db-*
 data/uploads/
 .env
 .DS_Store
+.cache/
+.npm/
