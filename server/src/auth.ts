@@ -6,7 +6,7 @@ const COOKIE = 'gs_admin';
 
 /** 用密码派生一个签名值放在 cookie 里；密码改了旧 cookie 自动失效 */
 function token(): string {
-  return createHmac('sha256', 'guitar-stage-admin').update(config.adminPassword).digest('hex');
+  return createHmac('sha256', 'guitar-live-flow-admin').update(config.adminPassword).digest('hex');
 }
 
 export function checkPassword(input: string): boolean {

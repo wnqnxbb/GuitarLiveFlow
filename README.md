@@ -1,4 +1,4 @@
-# 吉他谱 · 手机看谱 / 大屏看词
+# GuitarLiveFlow · 手机看谱 / 大屏看词
 
 弹唱时手机上看「和弦 + 歌词」并控制翻行，电脑或投影上同步显示大字歌词给观众；在家用电脑练琴时词谱和原图并排看。
 
@@ -51,7 +51,7 @@ npm run dev               # 后端 :3000，前端 :5173
 需要 Docker 和已解析到服务器的域名。
 
 ```bash
-git clone <本仓库> guitar && cd guitar
+git clone https://github.com/wnqnxbb/GuitarLiveFlow.git && cd GuitarLiveFlow
 cp .env.example .env
 # 编辑 .env：ADMIN_PASSWORD、ROOM_CODE、DOMAIN
 docker compose up -d --build
