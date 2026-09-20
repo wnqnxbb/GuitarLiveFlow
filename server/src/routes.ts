@@ -1,0 +1,146 @@
+import type { FastifyInstance } from 'fastify';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { pipeline } from 'node:stream/promises';
+import { createWriteStream } from 'node:fs';
+import { config } from './config.js';
+import { songsRepo, type SongInput } from './db.js';
+import { checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from './auth.js';
+import { broadcastAll, getRoom } from './room.js';
+import { parseChordPro } from '../../shared/chordpro.js';
+import type { ClientMessage, ClientRole } from '../../shared/types.js';
+
+function songInputFromBody(body: unknown): SongInput | null {
+  if (!body || typeof body !== 'object') return null;
+  const b = body as Record<string, unknown>;
+  const chordpro = typeof b.chordpro === 'string' ? b.chordpro : '';
+  const parsed = parseChordPro(chordpro);
+  const title = (typeof b.title === 'string' && b.title.trim()) || parsed.meta.title.trim();
+  if (!title) return null;
+  return {
+    title,
+    artist: typeof b.artist === 'string' ? b.artist.trim() : parsed.meta.subtitle ?? '',
+    key: typeof b.key === 'string' ? b.key.trim() : parsed.meta.key ?? '',
+    capo: typeof b.capo === 'number' ? b.capo : parsed.meta.capo ?? 0,
+    chordpro,
+  };
+}
+
+export async function registerRoutes(app: FastifyInstance) {
+  /* ---------- 登录 ---------- */
+  app.get('/api/me', async (req) => ({ admin: isAdmin(req) }));
+
+  app.post<{ Body: { password?: string } }>('/api/login', async (req, reply) => {
+    if (!checkPassword(req.body?.password ?? '')) {
+      return reply.code(401).send({ error: '密码不对' });
+    }
+    setAdminCookie(reply);
+    return { admin: true };
+  });
+
+  app.post('/api/logout', async (_req, reply) => {
+    clearAdminCookie(reply);
+    return { admin: false };
+  });
+
+  /* ---------- 歌曲 ---------- */
+  app.get('/api/songs', async () => songsRepo.list());
+
+  app.get<{ Params: { id: string } }>('/api/songs/:id', async (req, reply) => {
+    const song = songsRepo.get(Number(req.params.id));
+    if (!song) return reply.code(404).send({ error: '歌曲不存在' });
+    return song;
+  });
+
+  app.post('/api/songs', { preHandler: requireAdmin }, async (req, reply) => {
+    const input = songInputFromBody(req.body);
+    if (!input) return reply.code(400).send({ error: '缺少歌名' });
+    return reply.code(201).send(songsRepo.create(input));
+  });
+
+  app.put<{ Params: { id: string } }>('/api/songs/:id', { preHandler: requireAdmin }, async (req, reply) => {
+    const input = songInputFromBody(req.body);
+    if (!input) return reply.code(400).send({ error: '缺少歌名' });
+    const song = songsRepo.update(Number(req.params.id), input);
+    if (!song) return reply.code(404).send({ error: '歌曲不存在' });
+    broadcastAll({ type: 'song_updated', songId: song.id });
+    return song;
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/songs/:id', { preHandler: requireAdmin }, async (req) => {
+    const files = songsRepo.remove(Number(req.params.id));
+    await Promise.all(files.map((f) => fs.rm(path.join(config.uploadsDir, f), { force: true })));
+    return { ok: true };
+  });
+
+  /* ---------- 图片 ---------- */
+  app.post<{ Params: { id: string } }>('/api/songs/:id/images', { preHandler: requireAdmin }, async (req, reply) => {
+    const songId = Number(req.params.id);
+    if (!songsRepo.get(songId)) return reply.code(404).send({ error: '歌曲不存在' });
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: '没有文件' });
+    const ext = path.extname(file.filename).toLowerCase() || '.jpg';
+    if (!['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
+      return reply.code(400).send({ error: '只支持 jpg/png/webp/gif' });
+    }
+    const filename = `${songId}-${Date.now()}-${randomBytes(4).toString('hex')}${ext}`;
+    await pipeline(file.file, createWriteStream(path.join(config.uploadsDir, filename)));
+    if (file.file.truncated) {
+      await fs.rm(path.join(config.uploadsDir, filename), { force: true });
+      return reply.code(413).send({ error: '文件太大' });
+    }
+    const image = songsRepo.addImage(songId, filename);
+    broadcastAll({ type: 'song_updated', songId });
+    return reply.code(201).send(image);
+  });
+
+  app.delete<{ Params: { id: string; imageId: string } }>(
+    '/api/songs/:id/images/:imageId',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const filename = songsRepo.removeImage(Number(req.params.id), Number(req.params.imageId));
+      if (!filename) return reply.code(404).send({ error: '图片不存在' });
+      await fs.rm(path.join(config.uploadsDir, filename), { force: true });
+      broadcastAll({ type: 'song_updated', songId: Number(req.params.id) });
+      return { ok: true };
+    },
+  );
+
+  /* ---------- 房间状态（HTTP 兜底） ---------- */
+  app.get<{ Params: { code: string } }>('/api/rooms/:code/state', async (req, reply) => {
+    if (req.params.code !== config.roomCode) return reply.code(404).send({ error: '房间码不对' });
+    return getRoom(req.params.code).state;
+  });
+
+  /* ---------- WebSocket ---------- */
+  app.get<{ Params: { code: string }; Querystring: { role?: string } }>(
+    '/ws/rooms/:code',
+    { websocket: true },
+    (socket, req) => {
+      if (req.params.code !== config.roomCode) {
+        socket.close(4004, '房间码不对');
+        return;
+      }
+      const role: ClientRole = req.query.role === 'controller' ? 'controller' : 'display';
+      const room = getRoom(req.params.code);
+      room.join(socket, role);
+
+      socket.on('message', (raw) => {
+        let msg: ClientMessage;
+        try {
+          msg = JSON.parse(raw.toString()) as ClientMessage;
+        } catch {
+          return;
+        }
+        if (msg.type === 'ping') {
+          socket.send(JSON.stringify({ type: 'pong' }));
+        } else if (msg.type === 'state' && role === 'controller') {
+          room.update(msg.state);
+        }
+      });
+      socket.on('close', () => room.leave(socket));
+      socket.on('error', () => room.leave(socket));
+    },
+  );
+}

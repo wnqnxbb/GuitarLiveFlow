@@ -1,0 +1,121 @@
+import { useCallback, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ChordSheet } from '../components/ChordSheet';
+import { SongPicker } from '../components/SongPicker';
+import { useAutoAdvance, useKeyboardNav, useLocalStorage, useScrollToActive, useSong, useTransposed } from '../lib/hooks';
+
+/**
+ * 电脑练习页：本地控制，不广播。
+ * 左边和弦歌词，右边原图（如果有）。
+ */
+export function PracticePage() {
+  const params = useParams<{ id?: string }>();
+  const [songId, setSongId] = useState<number | null>(params.id ? Number(params.id) : null);
+  const { song, parsed } = useSong(songId);
+  const [transpose, setTranspose] = useState(0);
+  const sheet = useTransposed(parsed, transpose);
+  const [fontSize, setFontSize] = useLocalStorage('practice.fontSize', 20);
+  const [showImage, setShowImage] = useLocalStorage('practice.showImage', true);
+  const [showLyricsOnly, setShowLyricsOnly] = useState(false);
+  const [line, setLine] = useState(0);
+  const [auto, setAuto] = useState(false);
+  const [seconds, setSeconds] = useState(6);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const total = sheet?.lines.length ?? 0;
+  const go = useCallback((idx: number) => setLine(Math.max(0, Math.min(Math.max(0, total - 1), idx))), [total]);
+  const next = useCallback(() => go(line + 1), [go, line]);
+  const prev = useCallback(() => go(line - 1), [go, line]);
+  useKeyboardNav(next, prev);
+  useAutoAdvance(auto && total > 0, seconds, () => (line >= total - 1 ? setAuto(false) : next()));
+  useScrollToActive(containerRef, line);
+
+  const hasImage = !!song?.images.length;
+
+  if (songId === null) {
+    return (
+      <div className="page">
+        <header className="bar">
+          <Link to="/" className="btn btn--ghost">
+            ← 首页
+          </Link>
+          <span className="bar__title">练习：选择歌曲</span>
+        </header>
+        <SongPicker value={null} onChange={(id) => (setSongId(id), setLine(0))} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="page practice">
+      <header className="bar">
+        <Link to="/" className="btn btn--ghost">
+          ← 首页
+        </Link>
+        <button className="btn btn--ghost" onClick={() => setSongId(null)}>
+          ♪ {song?.title ?? '…'}
+          {song?.artist && <small> {song.artist}</small>}
+        </button>
+        <span className="bar__meta">
+          {line + 1}/{total}
+        </span>
+        <span className="bar__tools">
+          <button className="btn" onClick={() => setFontSize(Math.max(12, fontSize - 2))}>
+            A-
+          </button>
+          <button className="btn" onClick={() => setFontSize(Math.min(40, fontSize + 2))}>
+            A+
+          </button>
+          <button className="btn" onClick={() => setTranspose((t) => t - 1)}>
+            ♭
+          </button>
+          <span className="tools__value">
+            {transpose > 0 ? '+' : ''}
+            {transpose}
+            {sheet?.meta.key && ` (${sheet.meta.key})`}
+          </span>
+          <button className="btn" onClick={() => setTranspose((t) => t + 1)}>
+            ♯
+          </button>
+          <button className={`btn ${auto ? 'btn--primary' : ''}`} onClick={() => setAuto((v) => !v)}>
+            {auto ? '暂停' : '自动'}
+          </button>
+          <input
+            className="input input--num"
+            type="number"
+            min={1}
+            max={60}
+            value={seconds}
+            onChange={(e) => setSeconds(Number(e.target.value) || 6)}
+            title="每行秒数"
+          />
+          <button className={`btn ${showLyricsOnly ? 'btn--primary' : ''}`} onClick={() => setShowLyricsOnly((v) => !v)}>
+            {showLyricsOnly ? '显示和弦' : '只看歌词'}
+          </button>
+          {hasImage && (
+            <button className={`btn ${showImage ? 'btn--primary' : ''}`} onClick={() => setShowImage(!showImage)}>
+              原图
+            </button>
+          )}
+        </span>
+      </header>
+
+      <div className={`practice__body ${hasImage && showImage ? 'has-image' : ''}`}>
+        <div className="practice__sheet" ref={containerRef}>
+          {sheet && (
+            <ChordSheet song={sheet} activeIndex={line} fontSize={fontSize} showChords={!showLyricsOnly} onLineClick={go} />
+          )}
+          <div className="perform__spacer" />
+        </div>
+        {hasImage && showImage && (
+          <div className="practice__images">
+            {song!.images.map((img) => (
+              <img key={img.id} src={img.url} alt="原谱" loading="lazy" />
+            ))}
+          </div>
+        )}
+      </div>
+      <p className="hint hint--bottom">↑↓ 或空格翻行，点击某一行直接跳转。练习页不会同步到大屏。</p>
+    </div>
+  );
+}
