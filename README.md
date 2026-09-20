@@ -64,6 +64,22 @@ Caddy 会自动申请 HTTPS 证书，WebSocket 一并转发。数据库和上传
 
 更新版本：`git pull && docker compose up -d --build`。
 
+### 阿里云生产机（systemd 原生部署）
+
+线上一台跑的不是 Docker，而是 systemd + 原生 Node：目录 `/opt/guitar-live-flow`，服务名
+`guitar-live-flow`，由 Nginx 复用 `*.example.com` 证书反代到 `127.0.0.1:3000`。
+
+一键更新：
+
+```bash
+ssh root@SERVER_IP bash /root/deploy-guitar.sh
+```
+
+脚本会按 `package-lock.json` 指纹跳过 `npm ci` 和 better-sqlite3 的源码编译（这两步在 CentOS 8
+上因为没有 GLIBC 2.29、必须现场用 gcc-toolset-10 编译，原本是部署慢的主因），只改谱子或前端时
+全程约 30 秒；每次部署还会自动把 `seed/` 里新增的谱子补进数据库。源码见
+`deploy/deploy-server.sh`，改动后需同步到服务器 `/root/deploy-guitar.sh`。
+
 ## 演出现场建议
 
 - 手机把网页「添加到主屏幕」，全屏且不会误触浏览器栏；页面会申请屏幕常亮。
@@ -77,5 +93,6 @@ client/   React + Vite 前端
 server/   Fastify + WebSocket + SQLite 后端
 shared/   ChordPro 解析、移调、共享类型
 seed/     示例歌曲（.cho + 图片）
+deploy/   服务器部署脚本
 data/     运行时数据（数据库、上传图片），已被 git 忽略
 ```
