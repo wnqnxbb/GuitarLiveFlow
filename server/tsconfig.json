@@ -8,6 +8,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../.cache/tsconfig.server.tsbuildinfo",
     "resolveJsonModule": true,
     "types": ["node"]
   },

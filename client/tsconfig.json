@@ -7,6 +7,8 @@
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../.cache/tsconfig.client.tsbuildinfo",
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,

@@ -25,6 +25,7 @@ BS_BIN=$BS/build/Release/better_sqlite3.node
 BS_CACHE=$CACHE_DIR/better_sqlite3.linux-x64.node
 DEPS_STAMP=$CACHE_DIR/deps.stamp
 BUILD_STAMP=$CACHE_DIR/built.commit
+SEED_STAMP=$CACHE_DIR/seed.tree
 
 # 无论成败都打印结束标记，方便后台运行时判断进度
 trap 'echo "==> DEPLOY_EXIT=$?"' EXIT
@@ -84,25 +85,69 @@ if [ "$NEED_DEPS" -eq 1 ]; then
   chown -R guitar:guitar "$CACHE_DIR" "$BS/build" "$BS/prebuilds"
 fi
 
-if [ -f "$BUILD_STAMP" ] && [ "$(cat "$BUILD_STAMP")" = "$HEAD_COMMIT" ] \
-   && [ -f client/dist/index.html ] && [ -f server/dist/server/src/index.js ]; then
-  echo "==> [3/6] 代码未变化，跳过构建"
+# 哪些部分需要重建：默认都不建，按「上次构建提交 -> 本次提交」的改动路径判断
+NEED_CLIENT=0
+NEED_SERVER=0
+if [ -f "$BUILD_STAMP" ]; then
+  PREV_COMMIT="$(cat "$BUILD_STAMP")"
+  if [ -n "$PREV_COMMIT" ] && as_guitar git cat-file -e "$PREV_COMMIT^{commit}" 2>/dev/null; then
+    CHANGED="$(as_guitar git diff --name-only "$PREV_COMMIT" "$HEAD_COMMIT" 2>/dev/null || true)"
+    printf '%s\n' "$CHANGED" | grep -qE '^(client/|shared/|package(-lock)?\.json)' && NEED_CLIENT=1 || true
+    printf '%s\n' "$CHANGED" | grep -qE '^(server/|shared/|package(-lock)?\.json)' && NEED_SERVER=1 || true
+  else
+    # 上次构建的提交已不存在（force push 等），保守全量构建
+    NEED_CLIENT=1
+    NEED_SERVER=1
+  fi
 else
-  echo "==> [3/6] 构建前端与后端"
-  as_guitar "$NPM" run build
-  printf '%s\n' "$HEAD_COMMIT" > "$BUILD_STAMP"
-  chown guitar:guitar "$BUILD_STAMP"
+  NEED_CLIENT=1
+  NEED_SERVER=1
 fi
+# 产物缺失或这次重装了依赖/换了编译器，强制全量构建
+[ -f client/dist/index.html ] || NEED_CLIENT=1
+[ -f server/dist/server/src/index.js ] || NEED_SERVER=1
+if [ "$NEED_DEPS" -eq 1 ]; then
+  NEED_CLIENT=1
+  NEED_SERVER=1
+fi
+
+if [ "$NEED_CLIENT" -eq 0 ] && [ "$NEED_SERVER" -eq 0 ]; then
+  echo "==> [3/6] 前后端代码均未变化，跳过构建"
+else
+  # 按需分别构建：只改前端时跳过慢的 server tsc，只改后端时跳过 vite
+  if [ "$NEED_CLIENT" -eq 1 ]; then
+    echo "==> [3/6] 构建前端（client tsc --noEmit + vite build）"
+    as_guitar "$NPM" run build -w client
+  fi
+  if [ "$NEED_SERVER" -eq 1 ]; then
+    echo "==> [3/6] 构建后端（server tsc）"
+    as_guitar "$NPM" run build -w server
+  fi
+fi
+printf '%s\n' "$HEAD_COMMIT" > "$BUILD_STAMP"
+chown guitar:guitar "$BUILD_STAMP"
 
 echo "==> [4/6] 重启服务"
 systemctl restart guitar-live-flow
-sleep 2
+# 轮询健康检查，就绪就往下走：比固定 sleep 2 更快，也更可靠
+for _ in $(seq 1 40); do
+  curl -fsS -m 2 http://127.0.0.1:3000/api/health >/dev/null 2>&1 && break
+  sleep 0.5
+done
 systemctl is-active guitar-live-flow
 
-echo "==> [5/6] 补齐 seed 目录里新增的谱子（按标题去重，可重复执行）"
-cd "$APP_DIR/server"
-sudo -u guitar env HOME="$APP_DIR" NODE_ENV=production "$NODE" dist/server/src/seed.js \
-  || echo "    seed 步骤失败，不影响本次部署"
+SEED_TREE="$(as_guitar git rev-parse "$HEAD_COMMIT:seed" 2>/dev/null || true)"
+if [ -n "$SEED_TREE" ] && [ -f "$SEED_STAMP" ] && [ "$(cat "$SEED_STAMP")" = "$SEED_TREE" ]; then
+  echo "==> [5/6] seed 目录未变化，跳过导入"
+else
+  echo "==> [5/6] 补齐 seed 目录里新增的谱子（按标题去重，可重复执行）"
+  cd "$APP_DIR/server"
+  sudo -u guitar env HOME="$APP_DIR" NODE_ENV=production "$NODE" dist/server/src/seed.js \
+    || echo "    seed 步骤失败，不影响本次部署"
+  cd "$APP_DIR"
+  printf '%s\n' "$SEED_TREE" > "$SEED_STAMP"
+  chown guitar:guitar "$SEED_STAMP"
+fi
 
 echo "==> [6/6] 健康检查"
 curl -s http://127.0.0.1:3000/api/health; echo
