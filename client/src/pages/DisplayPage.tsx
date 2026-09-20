@@ -56,6 +56,7 @@ export function DisplayPage() {
         activeIndex={room.state.lineIndex}
         title={song?.title}
         variant={room.state.stageStyle}
+        follow={room.state.follow}
       />
       <div className={`stage__ui ${showUi ? '' : 'is-hidden'}`}>
         <Link to="/" className="btn btn--ghost">

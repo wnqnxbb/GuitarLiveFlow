@@ -191,6 +191,16 @@ export function PerformPage() {
             ))}
           </div>
           <div className="tools__row">
+            <span>跟随进度</span>
+            <button
+              className={`btn ${state.follow ? 'btn--primary' : ''}`}
+              onClick={() => send({ follow: !state.follow })}
+            >
+              {state.follow ? '开' : '关'}
+            </button>
+            <span className="tools__hint">开启后高亮当前唱到的一句并显示进度条</span>
+          </div>
+          <div className="tools__row">
             <button className="btn" onClick={() => setLine(0)}>
               回到开头
             </button>

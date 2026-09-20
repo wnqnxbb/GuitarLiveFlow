@@ -86,6 +86,7 @@ function sanitize(patch: Partial<RoomState>): Partial<RoomState> {
   if (typeof patch.secondsPerLine === 'number' && patch.secondsPerLine > 0) out.secondsPerLine = Math.min(60, patch.secondsPerLine);
   if (typeof patch.transpose === 'number' && Number.isInteger(patch.transpose)) out.transpose = Math.max(-11, Math.min(11, patch.transpose));
   if (isStageStyle(patch.stageStyle)) out.stageStyle = patch.stageStyle;
+  if (typeof patch.follow === 'boolean') out.follow = patch.follow;
   return out;
 }
 

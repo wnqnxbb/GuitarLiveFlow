@@ -219,32 +219,30 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
   .stage__title--corner { font-size: 4vw; }
 }
 
-/* ---- 大屏歌词：门帘全量（整首竖排） ---- */
-.stage--curtain { align-items: stretch; }
+/* ---- 大屏歌词：门帘全量（整首竖排，铺满全屏，不显示进度/高亮） ---- */
+.stage--curtain { padding: 1vh .8vw; align-items: stretch; }
 .curtain {
   flex: 1; min-width: 0;
-  display: flex; flex-direction: row-reverse; justify-content: center; align-items: stretch;
-  gap: .55em;
-  /* 字号同时受屏宽（列数）和屏高（最长一句字数）限制，保证全量歌词一屏放下 */
-  font-size: clamp(12px, min(6vh, calc(92vw / (var(--cols) * 1.9)), calc(88vh / (var(--maxchars) * 1.05))), 64px);
-  line-height: 1.15;
+  display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: stretch;
+  /* 字号取「每列可用宽度」和「最长一句所占高度」两个上限的较小值，尽量占满屏幕 */
+  font-size: clamp(14px, min(calc(98vw / (var(--cols) * 1.2)), calc(96vh / (var(--maxchars) * 1.05))), 16vh);
+  line-height: 1.1;
 }
 .curtain__line {
-  writing-mode: vertical-rl;
-  white-space: nowrap;
-  max-height: 100%;
-  color: var(--fg); opacity: .55;
+  writing-mode: vertical-rl; text-align: center;
+  white-space: nowrap; max-height: 100%;
+  color: var(--fg);
   transition: opacity .35s ease, color .35s ease, font-weight .35s ease;
 }
-.curtain__line.is-past { opacity: .28; }
+/* 仅在「跟随进度」开启时才加上这两个 class */
+.curtain__line.is-past { opacity: .3; }
 .curtain__line.is-active {
-  opacity: 1; font-weight: 700; color: var(--accent);
+  font-weight: 700; color: var(--accent);
   text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 @media (orientation: portrait) {
-  /* 竖屏门帘：列会很多，适当缩小并允许横向滚动兜底 */
+  /* 竖屏列多时允许横向滚动兜底 */
   .curtain { overflow-x: auto; justify-content: flex-start; }
-  .curtain__line { font-size: 90%; }
 }
 
 /* ---- 练习页 ---- */

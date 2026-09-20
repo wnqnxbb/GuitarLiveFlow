@@ -50,6 +50,8 @@ export interface RoomState {
   transpose: number;
   /** 大屏展示样式，手机端选择后同步给大屏 */
   stageStyle: StageStyle;
+  /** 是否跟随进度：开启后大屏高亮当前唱到的一句并显示进度条，关闭则纯展示 */
+  follow: boolean;
   updatedAt: number;
 }
 
@@ -60,6 +62,7 @@ export const DEFAULT_ROOM_STATE: RoomState = {
   secondsPerLine: 6,
   transpose: 0,
   stageStyle: 'scroll',
+  follow: false,
   updatedAt: 0,
 };
 

@@ -10,13 +10,15 @@ interface Props {
   context?: number;
   /** 展示样式，见 shared/types.ts 的 STAGE_STYLES */
   variant?: StageStyle;
+  /** 是否跟随进度：开启后门帘样式高亮当前句并显示进度条 */
+  follow?: boolean;
 }
 
 /**
  * 大屏歌词。只展示歌词，纯和弦的前奏/间奏不出现；遇到间奏时继续高亮上一句歌词。
  * 具体样式由 variant 决定，新增样式只需在这里加一个分支 + 一个子组件。
  */
-export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll' }: Props) {
+export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow }: Props) {
   const lyricLines = song?.lines.filter((l) => !l.instrumental && l.lyrics.trim() !== '') ?? [];
 
   if (!song || lyricLines.length === 0) {
@@ -37,7 +39,7 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
   const progress = ((activeIndex + 1) / song.lines.length) * 100;
 
   if (variant === 'curtain') {
-    return <CurtainStage lyricLines={lyricLines} activePos={activePos} title={title} progress={progress} />;
+    return <CurtainStage lyricLines={lyricLines} activePos={activePos} progress={progress} follow={follow} />;
   }
   return <ScrollStage lyricLines={lyricLines} activePos={activePos} title={title} progress={progress} context={context} />;
 }
@@ -49,25 +51,32 @@ interface InnerProps {
   progress: number;
 }
 
-/** 样式二：门帘全量。整首歌词一句一列、从上往下竖排，列与列从右往左排开 */
-function CurtainStage({ lyricLines, activePos, title, progress }: InnerProps) {
-  // 按行数和最长一句的字数估算字号，保证全部歌词都能塞进一屏（不滚动）
+/**
+ * 样式二：门帘全量。整首歌词一句一列、从上往下竖排，列与列从右往左铺满整屏。
+ * follow 开启时高亮当前句并显示进度条，关闭则纯展示。
+ */
+function CurtainStage({
+  lyricLines,
+  activePos,
+  progress,
+  follow,
+}: InnerProps & { follow?: boolean }) {
+  // 按列数和最长一句的字数估算字号，尽量占满屏幕又不溢出
   const maxChars = Math.max(1, ...lyricLines.map((l) => l.lyrics.trim().length));
   const style = { '--cols': lyricLines.length, '--maxchars': maxChars } as CSSProperties;
   return (
     <div className="stage stage--curtain">
-      {title && <div className="stage__title stage__title--corner">{title}</div>}
       <div className="curtain" style={style}>
         {lyricLines.map((line, pos) => (
           <div
             key={line.index}
-            className={`curtain__line ${pos === activePos ? 'is-active' : ''} ${pos < activePos ? 'is-past' : ''}`}
+            className={`curtain__line ${follow && pos === activePos ? 'is-active' : ''} ${follow && pos < activePos ? 'is-past' : ''}`}
           >
             {line.lyrics.trim()}
           </div>
         ))}
       </div>
-      <div className="stage__progress" style={{ width: `${progress}%` }} />
+      {follow && <div className="stage__progress" style={{ width: `${progress}%` }} />}
     </div>
   );
 }
