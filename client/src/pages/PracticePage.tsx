@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChordSheet } from '../components/ChordSheet';
+import { ImageLightbox } from '../components/ImageLightbox';
 import { SongPicker } from '../components/SongPicker';
 import { useAutoAdvance, useKeyboardNav, useLocalStorage, useScrollToActive, useSong, useTransposed } from '../lib/hooks';
 
@@ -18,6 +19,7 @@ export function PracticePage() {
   const [showImage, setShowImage] = useLocalStorage('practice.showImage', true);
   const [tile, setTile] = useLocalStorage('practice.tile', false);
   const [showLyricsOnly, setShowLyricsOnly] = useState(false);
+  const [zoom, setZoom] = useState<number | null>(null);
   const [line, setLine] = useState(0);
   const [auto, setAuto] = useState(false);
   const [seconds, setSeconds] = useState(6);
@@ -109,9 +111,9 @@ export function PracticePage() {
       <div className={`practice__body ${tile && hasImage ? 'is-tile' : hasImage && showImage ? 'has-image' : ''}`}>
         {tile && hasImage ? (
           <div className="practice__tiles">
-            {song!.images.map((img) => (
+            {song!.images.map((img, i) => (
               <div className="practice__tile" key={img.id}>
-                <img src={img.url} alt="原谱" loading="lazy" />
+                <img src={img.url} alt="原谱" loading="lazy" onClick={() => setZoom(i)} title="点击放大" />
               </div>
             ))}
           </div>
@@ -125,15 +127,16 @@ export function PracticePage() {
             </div>
             {hasImage && showImage && (
               <div className="practice__images">
-                {song!.images.map((img) => (
-                  <img key={img.id} src={img.url} alt="原谱" loading="lazy" />
+                {song!.images.map((img, i) => (
+                  <img key={img.id} src={img.url} alt="原谱" loading="lazy" onClick={() => setZoom(i)} title="点击放大" />
                 ))}
               </div>
             )}
           </>
         )}
       </div>
-      <p className="hint hint--bottom">↑↓ 或空格翻行，点击某一行直接跳转。按 T 切换谱子平铺。练习页不会同步到大屏。</p>
+      <p className="hint hint--bottom">↑↓ 或空格翻行，点击某一行直接跳转。按 T 切换谱子平铺，点击谱子图片可全屏放大。练习页不会同步到大屏。</p>
+      {zoom !== null && song && <ImageLightbox images={song.images} index={zoom} onIndex={setZoom} onClose={() => setZoom(null)} />}
     </div>
   );
 }
