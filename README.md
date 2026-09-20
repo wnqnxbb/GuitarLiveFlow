@@ -76,9 +76,18 @@ ssh root@SERVER_IP bash /root/deploy-guitar.sh
 ```
 
 脚本会按 `package-lock.json` 指纹跳过 `npm ci` 和 better-sqlite3 的源码编译（这两步在 CentOS 8
-上因为没有 GLIBC 2.29、必须现场用 gcc-toolset-10 编译，原本是部署慢的主因），只改谱子或前端时
-全程约 30 秒；每次部署还会自动把 `seed/` 里新增的谱子补进数据库。源码见
+上因为没有 GLIBC 2.29、必须现场用 gcc-toolset-10 编译，原本是部署慢的主因）；每次部署还会自动把 `seed/` 里新增的谱子补进数据库。源码见
 `deploy/deploy-server.sh`，改动后需同步到服务器 `/root/deploy-guitar.sh`。
+
+进一步提速（2026-09-20 后）：
+
+- `tsc` 开启增量编译，缓存放在仓库根的 `.cache/`（仅本机保留，gitignore 忽略），第二次起类型检查快一半左右；
+- 按「上次构建提交 → 本次提交」的改动路径分别决定重建前端/后端：只改 `client/` 时不跑慢的
+  server `tsc`，只改 `server/` 时不跑 vite；
+- 重启后用轮询 `/api/health` 代替固定 `sleep 2`；`seed/` 目录树未变化时跳过导入。
+
+实测（2 vCPU 阿里云 ECS，一次改代码的完整部署）：优化前约 15s，优化后全量重建约 8s、
+只改前端约 5s。
 
 ## 演出现场建议
 
