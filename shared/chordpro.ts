@@ -233,9 +233,3 @@ export function transposeSong(song: ParsedSong, semitones: number): ParsedSong {
   const meta = { ...song.meta, key: song.meta.key ? transposeChord(song.meta.key, semitones) : song.meta.key };
   return { meta, sections, lines };
 }
-
-/** 大屏显示用：纯歌词行不变；纯和弦行显示段落提示，例如 ♪ 前奏 */
-export function displayTextForLine(line: Line): string {
-  if (!line.instrumental) return line.lyrics.trim();
-  return `♪ ${line.sectionName || '间奏'}`;
-}
