@@ -44,16 +44,14 @@ export function isStageStyle(v: unknown): v is StageStyle {
  * - sans      系统默认黑体（不加载任何 web 字体）
  * - mashan    马善政毛笔楷书
  * - zhimang   志莽行书
- * - wenkai    霞鹜文楷
  * 字体文件自托管在 client/public/fonts/，只有被选中的字体才会下载。
  */
-export type StageFont = 'sans' | 'mashan' | 'zhimang' | 'wenkai';
+export type StageFont = 'sans' | 'mashan' | 'zhimang';
 
 export const STAGE_FONTS: readonly { id: StageFont; name: string; desc: string }[] = [
   { id: 'sans', name: '默认黑体', desc: '系统默认黑体，最清晰、不消耗流量' },
   { id: 'mashan', name: '毛笔楷书', desc: '马善政毛笔楷书：有笔锋又端正' },
   { id: 'zhimang', name: '行书', desc: '志莽行书：飘逸潇洒，认读稍慢' },
-  { id: 'wenkai', name: '楷体', desc: '霞鹜文楷：印刷楷体，最好认' },
 ];
 
 export function isStageFont(v: unknown): v is StageFont {

@@ -9,7 +9,6 @@ const FAMILIES: Record<StageFont, string | undefined> = {
   sans: undefined,
   mashan: "'Ma Shan Zheng', var(--lyric-font-fallback)",
   zhimang: "'Zhi Mang Xing', var(--lyric-font-fallback)",
-  wenkai: "'LXGW WenKai', var(--lyric-font-fallback)",
 };
 
 /** 返回要应用到歌词容器上的 font-family；默认字体返回 undefined */

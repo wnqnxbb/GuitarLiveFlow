@@ -7,6 +7,5 @@
 | --- | --- | --- | --- |
 | `mashanzheng.woff2` | Ma Shan Zheng 马善政毛笔楷书 | https://github.com/googlefonts/mashanzheng | Copyright 2018 The Ma Shan Zheng Project Authors |
 | `zhimangxing.woff2` | Zhi Mang Xing 志莽行书 | https://github.com/googlefonts/zhimangxing | Copyright 2018 The Zhi Mang Xing Project Authors |
-| `wenkai.woff2` | LXGW WenKai 霞鹜文楷 | https://github.com/lxgw/LxgwWenKai | Copyright 2021 The LXGW WenKai Project Authors |
 
 按 OFL 要求保留授权文本：本目录 `OFL.txt`。
