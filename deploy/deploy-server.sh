@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# GuitarLiveFlow 部署/更新脚本
+# GuitarLiveFlow 部署/更新脚本（服务器端）
 # 环境：阿里云 CentOS 8 + Nginx(复用 *.example.com 证书) + systemd 原生 Node 部署
 #
-# 流程：拉代码 -> 依赖没变就跳过（装依赖/编译 better-sqlite3）-> 构建 -> 重启 -> 补 seed -> 健康检查
+# 流程：（代码已由本地 rsync 同步好）-> 依赖没变就跳过（装依赖/编译 better-sqlite3）
+#       -> 构建 -> 重启 -> 补 seed -> 健康检查
 # 优化：better-sqlite3 编译产物和依赖指纹缓存在 .deploy-cache/，
 #       日常只改内容（谱子、前端页面）时跳过 npm ci 与编译，全程 30 秒左右。
 #
-# 用法：ssh root@SERVER_IP bash /root/deploy-guitar.sh
+# 代码同步方式：本地 `bash deploy/deploy-local.sh` 通过 rsync 直传，不再由本脚本
+# 从 GitHub 拉取（服务器到 GitHub 的连通性不稳定，超时/空响应时有发生）。
+# 是否需要重建前端/后端由本地 rsync 后的变更文件判断，通过环境变量传入：
+#   NEED_CLIENT=0|1  NEED_SERVER=0|1（未传时默认都当作 1，保守全量构建）
+#
+# 用法：ssh root@SERVER_IP "NEED_CLIENT=1 NEED_SERVER=1 bash /root/deploy-guitar.sh"
+# （一般不用手动传参，由 deploy/deploy-local.sh 自动算好并传入）
 set -euo pipefail
 
 APP_DIR=/opt/guitar-live-flow
@@ -15,16 +22,17 @@ NPM=/opt/node24/bin/npm
 GYP=/opt/node24/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js
 TOOLSET=/opt/rh/gcc-toolset-10/root/usr/bin
 PYTHON=/usr/bin/python3.9
-BRANCH=main
 # 国内服务器走 npmmirror，比官方源快得多
 REGISTRY=https://registry.npmmirror.com
+
+: "${NEED_CLIENT:=1}"
+: "${NEED_SERVER:=1}"
 
 CACHE_DIR=$APP_DIR/.deploy-cache
 BS=$APP_DIR/node_modules/better-sqlite3
 BS_BIN=$BS/build/Release/better_sqlite3.node
 BS_CACHE=$CACHE_DIR/better_sqlite3.linux-x64.node
 DEPS_STAMP=$CACHE_DIR/deps.stamp
-BUILD_STAMP=$CACHE_DIR/built.commit
 SEED_STAMP=$CACHE_DIR/seed.tree
 
 # 无论成败都打印结束标记，方便后台运行时判断进度
@@ -33,11 +41,9 @@ trap 'echo "==> DEPLOY_EXIT=$?"' EXIT
 cd "$APP_DIR"
 as_guitar() { sudo -u guitar env HOME="$APP_DIR" PATH=/opt/node24/bin:/usr/bin:/bin "$@"; }
 
-echo "==> [0/6] 从 GitHub 拉取 $BRANCH"
-as_guitar git fetch origin "$BRANCH"
-as_guitar git reset --hard "origin/$BRANCH"
-HEAD_COMMIT="$(as_guitar git rev-parse HEAD)"
-as_guitar git log --oneline -1
+echo "==> [0/6] 代码已由本地 rsync 同步，修正文件属主"
+chown -R guitar:guitar client server shared seed package.json package-lock.json 2>/dev/null || true
+echo "    NEED_CLIENT=$NEED_CLIENT NEED_SERVER=$NEED_SERVER"
 
 mkdir -p "$CACHE_DIR"
 
@@ -83,33 +89,14 @@ if [ "$NEED_DEPS" -eq 1 ]; then
   cp "$BS_BIN" "$BS_CACHE"
   printf '%s\n' "$DEPS_FP" > "$DEPS_STAMP"
   chown -R guitar:guitar "$CACHE_DIR" "$BS/build" "$BS/prebuilds"
+  # 依赖重装/编译器换了，前后端都要重新构建
+  NEED_CLIENT=1
+  NEED_SERVER=1
 fi
 
-# 哪些部分需要重建：默认都不建，按「上次构建提交 -> 本次提交」的改动路径判断
-NEED_CLIENT=0
-NEED_SERVER=0
-if [ -f "$BUILD_STAMP" ]; then
-  PREV_COMMIT="$(cat "$BUILD_STAMP")"
-  if [ -n "$PREV_COMMIT" ] && as_guitar git cat-file -e "$PREV_COMMIT^{commit}" 2>/dev/null; then
-    CHANGED="$(as_guitar git diff --name-only "$PREV_COMMIT" "$HEAD_COMMIT" 2>/dev/null || true)"
-    printf '%s\n' "$CHANGED" | grep -qE '^(client/|shared/|package(-lock)?\.json)' && NEED_CLIENT=1 || true
-    printf '%s\n' "$CHANGED" | grep -qE '^(server/|shared/|package(-lock)?\.json)' && NEED_SERVER=1 || true
-  else
-    # 上次构建的提交已不存在（force push 等），保守全量构建
-    NEED_CLIENT=1
-    NEED_SERVER=1
-  fi
-else
-  NEED_CLIENT=1
-  NEED_SERVER=1
-fi
-# 产物缺失或这次重装了依赖/换了编译器，强制全量构建
+# 产物缺失时强制全量构建（比如第一次部署、或 dist 被手动清理过）
 [ -f client/dist/index.html ] || NEED_CLIENT=1
 [ -f server/dist/server/src/index.js ] || NEED_SERVER=1
-if [ "$NEED_DEPS" -eq 1 ]; then
-  NEED_CLIENT=1
-  NEED_SERVER=1
-fi
 
 if [ "$NEED_CLIENT" -eq 0 ] && [ "$NEED_SERVER" -eq 0 ]; then
   echo "==> [3/6] 前后端代码均未变化，跳过构建"
@@ -124,8 +111,6 @@ else
     as_guitar "$NPM" run build -w server
   fi
 fi
-printf '%s\n' "$HEAD_COMMIT" > "$BUILD_STAMP"
-chown guitar:guitar "$BUILD_STAMP"
 
 echo "==> [4/6] 重启服务"
 systemctl restart guitar-live-flow
@@ -136,7 +121,8 @@ for _ in $(seq 1 40); do
 done
 systemctl is-active guitar-live-flow
 
-SEED_TREE="$(as_guitar git rev-parse "$HEAD_COMMIT:seed" 2>/dev/null || true)"
+# seed 版本判断改成对目录内容算 hash（不再依赖 git rev-parse）
+SEED_TREE="$(find seed -type f 2>/dev/null | sort | xargs -r sha256sum | sha256sum | cut -d' ' -f1)"
 if [ -n "$SEED_TREE" ] && [ -f "$SEED_STAMP" ] && [ "$(cat "$SEED_STAMP")" = "$SEED_TREE" ]; then
   echo "==> [5/6] seed 目录未变化，跳过导入"
 else

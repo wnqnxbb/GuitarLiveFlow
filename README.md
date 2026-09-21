@@ -120,22 +120,33 @@ Caddy 会自动申请 HTTPS 证书，WebSocket 一并转发。数据库和上传
 线上一台跑的不是 Docker，而是 systemd + 原生 Node：目录 `/opt/guitar-live-flow`，服务名
 `guitar-live-flow`，由 Nginx 复用 `*.example.com` 证书反代到 `127.0.0.1:3000`。
 
-一键更新：
+一键部署（在本机仓库根目录执行，不用手动 ssh 上服务器）：
 
 ```bash
-ssh root@SERVER_IP bash /root/deploy-guitar.sh
+bash deploy/deploy-local.sh
 ```
 
-脚本会按 `package-lock.json` 指纹跳过 `npm ci` 和 better-sqlite3 的源码编译（这两步在 CentOS 8
-上因为没有 GLIBC 2.29、必须现场用 gcc-toolset-10 编译，原本是部署慢的主因）；每次部署还会自动把 `seed/` 里新增的谱子补进数据库。源码见
-`deploy/deploy-server.sh`，改动后需同步到服务器 `/root/deploy-guitar.sh`。
+这个脚本会把本地 `client/ server/ shared/ seed/ package*.json` 通过 `rsync` 直接同步到服务器，
+再自动 `ssh` 触发服务器端的构建/重启脚本，全程一条命令跑完。之前是让服务器自己 `git fetch`
+GitHub，但服务器到 GitHub 的连通性经常超时/无响应，改成本地直传后不再依赖这段网络。
+
+服务器端脚本（`deploy/deploy-server.sh`，同步后即 `/root/deploy-guitar.sh`）会按
+`package-lock.json` 指纹跳过 `npm ci` 和 better-sqlite3 的源码编译（这两步在 CentOS 8
+上因为没有 GLIBC 2.29、必须现场用 gcc-toolset-10 编译，原本是部署慢的主因）；是否需要重建
+前端/后端由本地 `rsync` 的实际变更文件判断（取代了之前的 git diff）；每次部署还会自动把
+`seed/` 里新增的谱子补进数据库（用目录内容 hash 判断是否需要重新导入）。改动
+`deploy/deploy-server.sh` 后记得 `scp` 同步到服务器 `/root/deploy-guitar.sh`：
+
+```bash
+scp deploy/deploy-server.sh root@SERVER_IP:/root/deploy-guitar.sh
+```
 
 进一步提速（2026-09-20 后）：
 
 - `tsc` 开启增量编译，缓存放在仓库根的 `.cache/`（仅本机保留，gitignore 忽略），第二次起类型检查快一半左右；
-- 按「上次构建提交 → 本次提交」的改动路径分别决定重建前端/后端：只改 `client/` 时不跑慢的
+- 前端/后端按本次实际改动的文件路径分别决定要不要重建：只改 `client/` 时不跑慢的
   server `tsc`，只改 `server/` 时不跑 vite；
-- 重启后用轮询 `/api/health` 代替固定 `sleep 2`；`seed/` 目录树未变化时跳过导入。
+- 重启后用轮询 `/api/health` 代替固定 `sleep 2`；`seed/` 目录内容未变化时跳过导入。
 
 实测（2 vCPU 阿里云 ECS，一次改代码的完整部署）：优化前约 15s，优化后全量重建约 8s、
 只改前端约 5s。
