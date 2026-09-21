@@ -24,6 +24,10 @@ db.exec(`
     sort INTEGER NOT NULL DEFAULT 0
   );
   CREATE INDEX IF NOT EXISTS idx_song_images_song ON song_images(song_id, sort);
+  CREATE TABLE IF NOT EXISTS display_shares (
+    song_id INTEGER PRIMARY KEY REFERENCES songs(id) ON DELETE CASCADE,
+    code TEXT NOT NULL UNIQUE CHECK(length(code) = 6 AND code NOT GLOB '*[^0-9]*')
+  );
 `);
 
 interface SongRow {

@@ -52,12 +52,12 @@ if (fs.existsSync(indexPath)) {
     root: config.clientDist,
     prefix: '/',
     wildcard: false,
-    // index.html 不缓存（发新版后必须重新校验），带哈希的资源长期缓存
+    // 只有 vite 产出的 /assets/<name>-<hash>.<ext> 才是内容寻址的，可以永久缓存；
+    // 其余（index.html、icons、/fonts/ 等固定文件名）一律 no-cache 走 ETag 校验，
+    // 否则发新版后浏览器会拿着旧的字体声明/图标一直不放。
     setHeaders: (reply, filepath) => {
-      reply.header(
-        'Cache-Control',
-        filepath.endsWith('.html') ? 'no-cache' : 'public, max-age=31536000, immutable',
-      );
+      const hashed = filepath.includes(`${path.sep}assets${path.sep}`);
+      reply.header('Cache-Control', hashed ? 'public, max-age=31536000, immutable' : 'no-cache');
     },
   });
 

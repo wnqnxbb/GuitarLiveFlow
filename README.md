@@ -51,7 +51,11 @@
   `client/public/fonts/NOTICE.md`。
 
 新增字体：在 `shared/types.ts` 的 `StageFont` / `STAGE_FONTS` 里加一项，在 `client/src/lib/fonts.ts`
-里补上对应的 CSS `font-family`，再往 `client/public/fonts/` 放文件、在 `fonts.css` 里加 `@font-face`。
+里补上对应的 CSS `font-family`，再往 `client/public/fonts/` 放文件、在 `client/src/styles.css` 里加 `@font-face`。
+
+> 静态资源缓存策略：只有 vite 产出的 `/assets/<name>-<hash>` 带永久强缓存；`index.html`、`/fonts/*`、
+> 图标等都走 `no-cache`+ETag 校验。所以字体声明必须写在打包的 `styles.css` 里——放 `public/` 下的固定
+> 文件名会被浏览器长期缓存，新版字体加不进去（曾因此踩坑）。
 
 ## 谱子格式（ChordPro）
 

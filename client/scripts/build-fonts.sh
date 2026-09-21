@@ -8,6 +8,8 @@
 # 依赖：python3 + fonttools + brotli （pip install fonttools brotli）
 # 用法：bash client/scripts/build-fonts.sh
 # 产物：mashanzheng / zhimangxing / maocao / longcang / kuaile / xiaowei 的 .woff2（已提交进仓库，平时不用重跑）
+# 注意：文件的 @font-face 声明写在 client/src/styles.css 里（不能单独放 public/：
+# 固定文件名会被长期强缓存，新增字体后浏览器拿不到新的声明）。
 set -euo pipefail
 
 OUT="$(cd "$(dirname "$0")/.." && pwd)/public/fonts"
@@ -51,4 +53,4 @@ for entry in "${FONTS[@]}"; do
   ls -l "$OUT/$out" | awk '{printf "    %.2f MB\n", $5/1048576}'
 done
 
-echo "完成。记得同步更新 public/fonts/fonts.css 里的 @font-face 列表。"
+echo "完成。记得同步更新 client/src/styles.css 里的 @font-face 列表。"

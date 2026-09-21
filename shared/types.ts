@@ -1,5 +1,12 @@
 /** 前后端共用的数据类型 */
 
+/** 大屏分享的两种入口，均映射到 songId 对应的同步房间。 */
+export interface DisplayShare {
+  songId: number;
+  code: string;
+  path: string;
+}
+
 export interface SongSummary {
   id: number;
   title: string;

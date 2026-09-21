@@ -1,3 +1,53 @@
+/*
+ * 大屏歌词可选的书法字体（自托管，见 client/scripts/build-fonts.sh）。
+ * 声明必须放在打包 CSS 里（文件名带内容哈希），不能单独放 public/fonts/fonts.css：
+ * 固定文件名会被长期强缓存，导致新增字体发版后浏览器拿不到新的 @font-face。
+ * 未选中的字体不会下载，只有页面真的用到对应 font-family 时才拉 woff2。
+ * 字形子集：GB2312 全部汉字与符号 + ASCII，极生僻字回退到 --lyric-font-fallback。
+ */
+@font-face {
+  font-family: 'Ma Shan Zheng';
+  src: url('/fonts/mashanzheng.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Zhi Mang Xing';
+  src: url('/fonts/zhimangxing.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Liu Jian Mao Cao';
+  src: url('/fonts/maocao.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Long Cang';
+  src: url('/fonts/longcang.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ZCOOL KuaiLe';
+  src: url('/fonts/kuaile.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ZCOOL XiaoWei';
+  src: url('/fonts/xiaowei.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #f6f4ef;
   --fg: #1c1b19;

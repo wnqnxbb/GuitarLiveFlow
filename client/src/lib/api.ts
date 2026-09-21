@@ -1,4 +1,4 @@
-import type { SongDetail, SongImage, SongSummary } from '@shared/types';
+import type { DisplayShare, SongDetail, SongImage, SongSummary } from '@shared/types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -28,6 +28,8 @@ export interface SongPayload {
 }
 
 export const api = {
+  createDisplayShare: (id: number) => request<DisplayShare>(`/api/songs/${id}/display-share`, { method: 'POST', body: '{}' }),
+  resolveDisplayShare: (code: string) => request<DisplayShare>('/api/display-shares/resolve', { method: 'POST', body: JSON.stringify({ code }) }),
   me: () => request<{ admin: boolean }>('/api/me'),
   login: (password: string) => request<{ admin: boolean }>('/api/login', { method: 'POST', body: JSON.stringify({ password }) }),
   logout: () => request<{ admin: boolean }>('/api/logout', { method: 'POST' }),

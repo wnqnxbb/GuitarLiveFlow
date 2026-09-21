@@ -5,7 +5,8 @@ import { randomBytes } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import { createWriteStream } from 'node:fs';
 import { config } from './config.js';
-import { songsRepo, type SongInput } from './db.js';
+import { db, songsRepo, type SongInput } from './db.js';
+import { createDisplayShares } from './display-shares.js';
 import { checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from './auth.js';
 import { broadcastAll, getRoom, markAlive, startHeartbeat } from './room.js';
 import { parseChordPro } from '../../shared/chordpro.js';
@@ -62,6 +63,29 @@ function clearLoginFails(ip: string): void {
 }
 
 export async function registerRoutes(app: FastifyInstance) {
+  const shares = createDisplayShares(db);
+  /* ---------- 大屏分享：链接和六位简码指向同一首歌的同步房间 ---------- */
+  app.post<{ Params: { id: string } }>('/api/songs/:id/display-share', async (req, reply) => {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id <= 0) return reply.code(400).send({ error: '歌曲编号无效' });
+    reply.header('Cache-Control', 'no-store');
+    try {
+      const share = shares.getOrCreate(id);
+      return share ?? reply.code(404).send({ error: '歌曲不存在' });
+    } catch (error) {
+      req.log.error(error, '生成大屏分享失败');
+      return reply.code(503).send({ error: '分享密钥暂时无法生成，请稍后重试' });
+    }
+  });
+  app.post<{ Body: { code?: unknown } }>('/api/display-shares/resolve', async (req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    const code = req.body?.code;
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      return reply.code(400).send({ error: '请输入 6 位数字密钥' });
+    }
+    const share = shares.resolve(code);
+    return share ?? reply.code(404).send({ error: '密钥不存在，请核对手机上的 6 位数字' });
+  });
   /* ---------- 登录 ---------- */
   app.get('/api/me', async (req) => ({ admin: isAdmin(req) }));
 
