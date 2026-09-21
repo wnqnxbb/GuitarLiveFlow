@@ -220,12 +220,12 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 }
 
 /* ---- 大屏歌词：门帘全量（整首竖排，铺满全屏，不显示进度/高亮） ---- */
-.stage--curtain { padding: 1vh .8vw; align-items: stretch; }
+.stage--curtain { padding: 4vh .8vw 1vh; align-items: stretch; }
 .curtain {
   flex: 1; min-width: 0;
   display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: stretch;
   /* 字号取「每列可用宽度」和「最长一句所占高度」两个上限的较小值，尽量占满屏幕 */
-  font-size: clamp(14px, min(calc(98vw / (var(--cols) * 1.2)), calc(96vh / (var(--maxchars) * 1.05))), 16vh);
+  font-size: clamp(14px, min(calc(98vw / (var(--cols) * 1.2)), calc(90vh / (var(--maxchars) * 1.05))), 16vh);
   line-height: 1.1;
 }
 .curtain__line {
