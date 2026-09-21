@@ -47,25 +47,23 @@ export function isStageStyle(v: unknown): v is StageStyle {
 }
 
 /**
- * 大屏歌词字体：
- * - sans      系统默认黑体（不加载任何 web 字体）
- * - mashan    马善政毛笔楷书
+ * 大屏歌词字体（默认 mashan 毛笔楷书）：
+ * - sans      系统黑体（不加载任何 web 字体）
+ * - mashan    马善政毛笔楷书（默认）
  * - zhimang   志莽行书
  * - maocao    刘建毛草（狂草）
  * - longcang  龙藏（硬笔手写）
- * - kuaile    站酷快乐体（美术手写）
  * - xiaowei   站酷小薇（文艺细体）
  * 字体文件自托管在 client/public/fonts/，只有被选中的字体才会下载。
  */
-export type StageFont = 'sans' | 'mashan' | 'zhimang' | 'maocao' | 'longcang' | 'kuaile' | 'xiaowei';
+export type StageFont = 'sans' | 'mashan' | 'zhimang' | 'maocao' | 'longcang' | 'xiaowei';
 
 export const STAGE_FONTS: readonly { id: StageFont; name: string; desc: string }[] = [
-  { id: 'sans', name: '默认黑体', desc: '系统默认黑体，最清晰、不消耗流量' },
-  { id: 'mashan', name: '毛笔楷书', desc: '马善政毛笔楷书：有笔锋又端正' },
+  { id: 'sans', name: '黑体', desc: '系统黑体，最清晰、不消耗流量' },
+  { id: 'mashan', name: '毛笔楷书', desc: '马善政毛笔楷书：有笔锋又端正（默认）' },
   { id: 'zhimang', name: '行书', desc: '志莽行书：飘逸潇洒' },
   { id: 'maocao', name: '毛草', desc: '刘建毛草：狂草连绵，最花哨但最难认' },
   { id: 'longcang', name: '手写', desc: '龙藏：硬笔手写行楷，随意但认得出来' },
-  { id: 'kuaile', name: '快乐', desc: '站酷快乐体：圆润可爱的美术字，花哨又好认' },
   { id: 'xiaowei', name: '小薇', desc: '站酷小薇：清秀文艺的细体' },
 ];
 
@@ -99,7 +97,7 @@ export const DEFAULT_ROOM_STATE: RoomState = {
   transpose: 0,
   stageStyle: 'scroll',
   follow: false,
-  font: 'sans',
+  font: 'mashan',
   updatedAt: 0,
 };
 

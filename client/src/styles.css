@@ -34,13 +34,6 @@
   font-display: swap;
 }
 @font-face {
-  font-family: 'ZCOOL KuaiLe';
-  src: url('/fonts/kuaile.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
   font-family: 'ZCOOL XiaoWei';
   src: url('/fonts/xiaowei.woff2') format('woff2');
   font-weight: 400;
