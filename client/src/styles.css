@@ -207,12 +207,6 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 .stage__line.is-active { font-size: 7.2vw; color: var(--fg); opacity: 1; font-weight: 700; transform: scale(1); }
 .stage__line.is-past { opacity: .3; }
 .stage__progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width .3s; }
-.stage__ui {
-  position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-  background: rgba(0,0,0,.55); color: #ddd; font-size: 14px; transition: opacity .3s;
-}
-.stage__ui.is-hidden { opacity: 0; pointer-events: none; }
-.stage__ui .btn { color: #eee; }
 @media (orientation: portrait) {
   .stage__line { font-size: 6vw; }
   .stage__line.is-active { font-size: 9.5vw; }
