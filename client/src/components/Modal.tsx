@@ -8,6 +8,8 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
     const dialog = ref.current!;
     const previous = document.activeElement as HTMLElement | null;
     dialog.showModal();
+    // React 的 autoFocus 发生在 showModal 之前，打开后再次聚焦表单输入。
+    dialog.querySelector<HTMLInputElement>('input')?.focus();
     return () => { dialog.close(); previous?.focus(); };
   }, []);
   return (

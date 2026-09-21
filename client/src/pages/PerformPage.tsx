@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { STAGE_FONTS, STAGE_STYLES } from '@shared/types';
+import { Icon } from '../components/Icon';
 import { ChordSheet } from '../components/ChordSheet';
 import { SongPicker } from '../components/SongPicker';
 import { DisplayLinkDialog } from '../components/DisplayLinkDialog';
@@ -77,7 +78,7 @@ export function PerformPage() {
       <div className="page page--dark">
         <header className="bar">
           <Link to="/" className="btn btn--ghost">
-            ← 首页
+            <Icon name="back" size={18} /> 首页
           </Link>
           <span className="bar__title">选择歌曲</span>
           <span className={`dot ${room.connected ? 'is-on' : ''}`} title={room.connected ? '已连接' : '未连接'} />
@@ -109,12 +110,12 @@ export function PerformPage() {
           <span className={`dot ${room.connected ? 'is-on' : ''}`} title={room.connected ? '已连接' : '未连接'} />
           <span className="bar__displays" title="在线大屏数">{room.displays} 屏</span>
           {songId !== null && (
-            <button className="btn btn--ghost" onClick={() => setShowDisplayLink(true)} title="大屏链接">
-              🖥
+            <button className="btn btn--ghost" onClick={() => setShowDisplayLink(true)} title="大屏链接" aria-label="大屏链接">
+              <Icon name="monitor" />
             </button>
           )}
-          <button className="btn btn--ghost" onClick={() => setShowTools((v) => !v)}>
-            ⚙
+          <button className="btn btn--ghost" aria-label="演出设置" aria-expanded={showTools} onClick={() => setShowTools((v) => !v)}>
+            <Icon name="settings" />
           </button>
         </span>
       </header>
@@ -133,7 +134,8 @@ export function PerformPage() {
       )}
 
       {showTools && (
-        <div className="tools" onClick={(e) => e.stopPropagation()}>
+        <div className="tools" role="region" aria-label="演出设置" onClick={(e) => e.stopPropagation()}>
+          <div className="tools__head"><strong>演出设置</strong><button className="btn btn--ghost" onClick={() => setShowTools(false)} aria-label="关闭设置"><Icon name="close" /></button></div>
           <div className="tools__row">
             <span>字号</span>
             <button className="btn" onClick={() => setFontSize(Math.max(14, fontSize - 2))}>

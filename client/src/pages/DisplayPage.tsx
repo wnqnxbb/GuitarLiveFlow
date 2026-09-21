@@ -1,4 +1,5 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { DisplayJoinDialog } from '../components/DisplayJoinDialog';
 import { LyricsStage } from '../components/LyricsStage';
 import { useRoom } from '../lib/useRoom';
 import { useFullscreen, useSong, useWakeLock } from '../lib/hooks';
@@ -9,6 +10,7 @@ import { useFullscreen, useSong, useWakeLock } from '../lib/hooks';
  * 双击切换全屏。
  */
 export function DisplayPage() {
+  const navigate = useNavigate();
   const params = useParams<{ id?: string }>();
   const songId = params.id && /^\d+$/.test(params.id) ? Number(params.id) : null;
   const room = useRoom(songId === null ? null : `song-${songId}`, 'display');
@@ -18,10 +20,8 @@ export function DisplayPage() {
 
   if (songId === null) {
     return (
-      <div className="page page--stage" onDoubleClick={toggle}>
-        <div className="stage stage--idle">
-          <p className="hint">请从手机「演出」页选好歌后点「🖥」获取大屏链接</p>
-        </div>
+      <div className="page page--stage">
+        <DisplayJoinDialog onClose={() => navigate('/')} />
       </div>
     );
   }

@@ -110,7 +110,10 @@ export function useKeyboardNav(onNext: () => void, onPrev: () => void, extra?: R
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
+      // 分享弹窗内的 Enter/Escape 归弹窗处理，不能同时触发演出翻行或设置。
+      if (document.querySelector('dialog[open]')) return;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (target?.closest('button, a') && ['Enter', ' '].includes(e.key)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Enter', 'j', 'n'].includes(e.key)) {
         e.preventDefault();
@@ -147,6 +150,7 @@ export function useScrollToActive(containerRef: React.RefObject<HTMLElement | nu
     const el = container.querySelector<HTMLElement>(`[data-line="${activeIndex}"]`);
     if (!el) return;
     const top = el.offsetTop - container.clientHeight / 2 + el.offsetHeight / 2;
-    container.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    container.scrollTo({ top: Math.max(0, top), behavior: smooth && !reduced ? 'smooth' : 'auto' });
   }, [containerRef, activeIndex, smooth]);
 }

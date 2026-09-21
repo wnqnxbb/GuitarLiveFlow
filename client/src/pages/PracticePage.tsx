@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import { ChordSheet } from '../components/ChordSheet';
 import { ImageLightbox } from '../components/ImageLightbox';
 import { SongPicker } from '../components/SongPicker';
@@ -40,7 +41,7 @@ export function PracticePage() {
       <div className="page">
         <header className="bar">
           <Link to="/" className="btn btn--ghost">
-            ← 首页
+            <Icon name="back" size={18} /> 首页
           </Link>
           <span className="bar__title">练习：选择歌曲</span>
         </header>
@@ -53,7 +54,7 @@ export function PracticePage() {
     <div className="page practice">
       <header className="bar">
         <Link to="/" className="btn btn--ghost">
-          ← 首页
+          <Icon name="back" size={18} /> 首页
         </Link>
         <button className="btn btn--ghost" onClick={() => setSongId(null)}>
           ♪ {song?.title ?? '…'}
@@ -62,14 +63,16 @@ export function PracticePage() {
         <span className="bar__meta">
           {line + 1}/{total}
         </span>
-        <span className="bar__tools">
+        <div className="bar__tools" aria-label="练习工具">
+          <div className="tool-group" role="group" aria-label="字号">
           <button className="btn" onClick={() => setFontSize(Math.max(12, fontSize - 2))}>
             A-
           </button>
           <button className="btn" onClick={() => setFontSize(Math.min(40, fontSize + 2))}>
             A+
           </button>
-          <button className="btn" onClick={() => setTranspose((t) => t - 1)}>
+          </div><div className="tool-group" role="group" aria-label="移调">
+          <button className="btn" aria-label="降低半音" onClick={() => setTranspose((t) => t - 1)}>
             ♭
           </button>
           <span className="tools__value">
@@ -77,9 +80,10 @@ export function PracticePage() {
             {transpose}
             {sheet?.meta.key && ` (${sheet.meta.key})`}
           </span>
-          <button className="btn" onClick={() => setTranspose((t) => t + 1)}>
+          <button className="btn" aria-label="升高半音" onClick={() => setTranspose((t) => t + 1)}>
             ♯
           </button>
+          </div><div className="tool-group" role="group" aria-label="自动翻行">
           <button className={`btn ${auto ? 'btn--primary' : ''}`} onClick={() => setAuto((v) => !v)}>
             {auto ? '暂停' : '自动'}
           </button>
@@ -92,6 +96,7 @@ export function PracticePage() {
             onChange={(e) => setSeconds(Number(e.target.value) || 6)}
             title="每行秒数"
           />
+          </div><div className="tool-group" role="group" aria-label="阅读视图">
           <button className={`btn ${showLyricsOnly ? 'btn--primary' : ''}`} onClick={() => setShowLyricsOnly((v) => !v)}>
             {showLyricsOnly ? '显示和弦' : '只看歌词'}
           </button>
@@ -105,7 +110,8 @@ export function PracticePage() {
               原图
             </button>
           )}
-        </span>
+          </div>
+        </div>
       </header>
 
       <div className={`practice__body ${tile && hasImage ? 'is-tile' : hasImage && showImage ? 'has-image' : ''}`}>
