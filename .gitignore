@@ -10,3 +10,5 @@ data/uploads/
 .deploy-cache/
 # 线上运维记录：只留本地和服务器，不进 git
 运维记录.md
+# 本地 MV 概念演示素材，正式上线前另行压缩发布
+client/public/demo-media/

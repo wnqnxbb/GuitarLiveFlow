@@ -1,0 +1,28 @@
+/* 标签栏处于视频画面外；两种模式共用同一 DOM，键盘焦点不会在切换时丢失。 */
+.home-shell { min-height: 100%; position: relative; }
+.home-mode-tabs { position: absolute; z-index: 5; top: 38px; right: max(6vw, calc((100% - 1120px) / 2)); display: flex; padding: 4px; gap: 3px; border: 1px solid #d9d1c2; border-radius: 999px; background: #eeebe4; }
+.home-mode-tabs button { border: 0; background: transparent; color: #777166; font: 12px/1.2 inherit; font-size: 12px; padding: 9px 15px; border-radius: 999px; min-height: 34px; cursor: pointer; white-space: nowrap; transition: color .2s, background .2s; }
+.home-mode-tabs button[aria-selected=true] { background: #fffcf7; color: #292720; box-shadow: 0 2px 5px #00000008; }
+.home-shell--mv .home-mode-tabs { top: 10px; right: 38px; background: #171a17; border-color: #ffffff16; }
+.home-shell--mv .home-mode-tabs button { color: #aaa89f; }
+.home-shell--mv .home-mode-tabs button[aria-selected=true] { background: #34362d; color: #e7d3b1; }
+.home-shell [role=tabpanel] { min-height: 100dvh; }
+.home-shell .home { min-height: 100dvh; }
+.home-shell--classic .home__brand { padding-right: 190px; }
+.home-mode-loading { min-height: 100dvh; background: #0b0d0c; color: #aaa89f; display: grid; place-items: center; }
+/* 纯享隐藏 tabs，退出后恢复，避免任何导航遮住 MV。 */
+.home-shell:has(.is-pure) > .home-mode-tabs { visibility: hidden; }
+@media (min-width: 601px) and (max-height: 800px) { .home-shell--classic .home-mode-tabs { top: 26px; } }
+@media (max-width: 1000px) { .home-shell--mv .home-mode-tabs { right: 22px; } }
+@media (max-width: 600px) {
+  .home-mode-tabs { top: calc(19px + env(safe-area-inset-top)); right: 22px; padding: 3px; }
+  .home-mode-tabs button { padding: 8px 10px; font-size: 11px; min-height: 32px; }
+  .home-shell--classic .home__brand { padding-right: 142px; }
+  .home-shell--mv .home-mode-tabs { top: 16px; right: 20px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .home-shell--mv .home-mode-tabs { top: 3px; }
+  .home-shell--mv .home-mode-tabs button { min-height: 28px; padding-block: 5px; }
+}
+/* 首页增加模式选择后，将品牌固定在内容顶端，与标签栏对齐。 */
+.home-shell .home__inner { margin: 0 auto; }
