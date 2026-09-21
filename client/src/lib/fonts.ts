@@ -9,6 +9,10 @@ const FAMILIES: Record<StageFont, string | undefined> = {
   sans: undefined,
   mashan: "'Ma Shan Zheng', var(--lyric-font-fallback)",
   zhimang: "'Zhi Mang Xing', var(--lyric-font-fallback)",
+  maocao: "'Liu Jian Mao Cao', var(--lyric-font-fallback)",
+  longcang: "'Long Cang', var(--lyric-font-fallback)",
+  kuaile: "'ZCOOL KuaiLe', var(--lyric-font-fallback)",
+  xiaowei: "'ZCOOL XiaoWei', var(--lyric-font-fallback)",
 };
 
 /** 返回要应用到歌词容器上的 font-family；默认字体返回 undefined */

@@ -7,5 +7,9 @@
 | --- | --- | --- | --- |
 | `mashanzheng.woff2` | Ma Shan Zheng 马善政毛笔楷书 | https://github.com/googlefonts/mashanzheng | Copyright 2018 The Ma Shan Zheng Project Authors |
 | `zhimangxing.woff2` | Zhi Mang Xing 志莽行书 | https://github.com/googlefonts/zhimangxing | Copyright 2018 The Zhi Mang Xing Project Authors |
+| `maocao.woff2` | Liu Jian Mao Cao 刘建毛草 | https://github.com/googlefonts/liujianmaocao | Copyright 2018 The Liu Jian Mao Cao Project Authors |
+| `longcang.woff2` | Long Cang 龙藏 | https://github.com/googlefonts/longcang | Copyright 2018 The Long Cang Project Authors |
+| `kuaile.woff2` | ZCOOL KuaiLe 站酷快乐体 | https://github.com/googlefonts/zcool-kuaile | Copyright 2018 The ZCOOL KuaiLe Project Authors |
+| `xiaowei.woff2` | ZCOOL XiaoWei 站酷小薇 | https://github.com/googlefonts/zcool-xiaowei | Copyright 2018 The ZCOOL XiaoWei Project Authors |
 
 按 OFL 要求保留授权文本：本目录 `OFL.txt`。

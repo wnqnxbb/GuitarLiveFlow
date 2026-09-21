@@ -31,11 +31,22 @@
 
 ### 大屏歌词字体
 
-同一个 `⚙` 面板里的「歌词字体」：`默认黑体` / `毛笔楷书`（马善政毛笔楷书）/ `行书`（志莽行书），
-选中后立即同步给大屏。字体文件自托管在 `client/public/fonts/`（未选中的字体不会下载）：
+同一个 `⚙` 面板里的「歌词字体」，选中后立即同步给大屏：
+
+| 按钮 | 字体 | 体积 |
+| --- | --- | --- |
+| 默认黑体 | 系统黑体（不下载字体） | 0 |
+| 毛笔楷书 | 马善政毛笔楷书 Ma Shan Zheng | 3.2 MB |
+| 行书 | 志莽行书 Zhi Mang Xing | 2.3 MB |
+| 毛草 | 刘建毛草 Liu Jian Mao Cao（狂草，最难认） | 2.3 MB |
+| 手写 | 龙藏 Long Cang（硬笔手写行楷） | 2.9 MB |
+| 快乐 | 站酷快乐体 ZCOOL KuaiLe（圆润美术字） | 0.9 MB |
+| 小薇 | 站酷小薇 ZCOOL XiaoWei（文艺细体） | 2.6 MB |
+
+字体文件自托管在 `client/public/fonts/`（未选中的字体不会下载）：
 
 - 都是 OFL 开源可商用字体，只做了字符子集化（GB2312 + ASCII，约 7500 字），生僻字回退系统书法字体。
-- 单文件 2–3.2 MB，`font-display: swap`，选中时加载一次后走浏览器缓存。
+- 单文件 0.9–3.2 MB，`font-display: swap`，选中时加载一次后走浏览器缓存。
 - 重新生成：`bash client/scripts/build-fonts.sh`（需 python3 + fonttools + brotli），来源与授权见
   `client/public/fonts/NOTICE.md`。
 
