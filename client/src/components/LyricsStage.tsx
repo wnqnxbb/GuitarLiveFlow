@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { Line, ParsedSong } from '@shared/chordpro';
-import type { StageStyle } from '@shared/types';
+import type { StageFont, StageStyle } from '@shared/types';
+import { lyricFontFamily } from '../lib/fonts';
 
 interface Props {
   song: ParsedSong | null;
@@ -12,13 +13,15 @@ interface Props {
   variant?: StageStyle;
   /** 是否跟随进度：开启后门帘样式高亮当前句并显示进度条 */
   follow?: boolean;
+  /** 歌词字体，由手机端选择并通过房间状态同步 */
+  font?: StageFont;
 }
 
 /**
  * 大屏歌词。只展示歌词，纯和弦的前奏/间奏不出现；遇到间奏时继续高亮上一句歌词。
  * 具体样式由 variant 决定，新增样式只需在这里加一个分支 + 一个子组件。
  */
-export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow }: Props) {
+export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow, font }: Props) {
   const lyricLines = song?.lines.filter((l) => !l.instrumental && l.lyrics.trim() !== '') ?? [];
 
   if (!song || lyricLines.length === 0) {
@@ -39,9 +42,26 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
   const progress = ((activeIndex + 1) / song.lines.length) * 100;
 
   if (variant === 'curtain') {
-    return <CurtainStage lyricLines={lyricLines} activePos={activePos} progress={progress} follow={follow} />;
+    return (
+      <CurtainStage
+        lyricLines={lyricLines}
+        activePos={activePos}
+        progress={progress}
+        follow={follow}
+        font={font}
+      />
+    );
   }
-  return <ScrollStage lyricLines={lyricLines} activePos={activePos} title={title} progress={progress} context={context} />;
+  return (
+    <ScrollStage
+      lyricLines={lyricLines}
+      activePos={activePos}
+      title={title}
+      progress={progress}
+      context={context}
+      font={font}
+    />
+  );
 }
 
 interface InnerProps {
@@ -60,12 +80,13 @@ function CurtainStage({
   activePos,
   progress,
   follow,
-}: InnerProps & { follow?: boolean }) {
+  font,
+}: InnerProps & { follow?: boolean; font?: StageFont }) {
   // 按列数和最长一句的字数估算字号，尽量占满屏幕又不溢出
   const maxChars = Math.max(1, ...lyricLines.map((l) => l.lyrics.trim().length));
   const style = { '--cols': lyricLines.length, '--maxchars': maxChars } as CSSProperties;
   return (
-    <div className="stage stage--curtain">
+    <div className="stage stage--curtain" style={{ fontFamily: lyricFontFamily(font) }}>
       <div className="curtain" style={style}>
         {lyricLines.map((line, pos) => (
           <div
@@ -82,7 +103,7 @@ function CurtainStage({
 }
 
 /** 样式一：滚动逐句。当前句居中放大，前后几句变淡 */
-function ScrollStage({ lyricLines, activePos, title, progress, context }: InnerProps & { context: number }) {
+function ScrollStage({ lyricLines, activePos, title, progress, context, font }: InnerProps & { context: number; font?: StageFont }) {
   const items: { index: number; text: string; offset: number }[] = [];
   for (let off = -context; off <= context; off++) {
     const pos = activePos + off;
@@ -90,7 +111,7 @@ function ScrollStage({ lyricLines, activePos, title, progress, context }: InnerP
     items.push({ index: lyricLines[pos].index, text: lyricLines[pos].lyrics.trim(), offset: off });
   }
   return (
-    <div className="stage">
+    <div className="stage" style={{ fontFamily: lyricFontFamily(font) }}>
       {title && <div className="stage__title stage__title--corner">{title}</div>}
       <div className="stage__lines">
         {items.map((it) => (

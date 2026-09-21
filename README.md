@@ -24,11 +24,23 @@
   字号会根据「列数」和「最长一句的字数」自动放大到刚好占满屏幕，不滚动。
 
 「跟随进度」是一个开关：开启后大屏高亮当前唱到的一句（已唱过的变淡）并显示进度条，
-关闭则纯展示；默认关闭。两个设置都通过房间状态实时同步给大屏。开关只影响「门帘全量」样式，
-「滚动逐句」本来就是跟随当前句的。
+关闭则纯展示；默认关闭。开关只影响「门帘全量」样式，「滚动逐句」本来就是跟随当前句的。
 
 新增样式：在 `shared/types.ts` 的 `StageStyle` / `STAGE_STYLES` 里加一项，在
 `client/src/components/LyricsStage.tsx` 里加一个渲染分支即可，手机端选择器会自动出现。
+
+### 大屏歌词字体
+
+同一个 `⚙` 面板里的「歌词字体」：`默认黑体` / `毛笔楷书`（马善政毛笔楷书）/ `行书`（志莽行书）/
+`楷体`（霞鹜文楷），选中后立即同步给大屏。字体文件自托管在 `client/public/fonts/`（未选中的字体不会下载）：
+
+- 都是 OFL 开源可商用字体，只做了字符子集化（GB2312 + ASCII，约 7500 字），生僻字回退系统楷体。
+- 单文件 1.5–3.2 MB，`font-display: swap`，选中时加载一次后走浏览器缓存。
+- 重新生成：`bash client/scripts/build-fonts.sh`（需 python3 + fonttools + brotli），来源与授权见
+  `client/public/fonts/NOTICE.md`。
+
+新增字体：在 `shared/types.ts` 的 `StageFont` / `STAGE_FONTS` 里加一项，在 `client/src/lib/fonts.ts`
+里补上对应的 CSS `font-family`，再往 `client/public/fonts/` 放文件、在 `fonts.css` 里加 `@font-face`。
 
 ## 谱子格式（ChordPro）
 

@@ -194,7 +194,11 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 .stage--idle { text-align: center; padding: 24px; }
 
 /* ---- 大屏歌词 ---- */
-.page--stage { height: 100%; overflow: hidden; cursor: default; }
+/* 书法/楷体字体的缺字回退：优先系统楷体，保持风格一致 */
+.page--stage {
+  height: 100%; overflow: hidden; cursor: default;
+  --lyric-font-fallback: 'Kaiti SC', STKaiti, KaiTi, 'Songti SC', 'Noto Serif CJK SC', serif;
+}
 .stage { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 4vh 6vw; }
 .stage--idle .stage__title { font-size: 6vw; color: var(--muted); }
 .stage__title--corner { position: absolute; bottom: 3vh; left: 4vw; font-size: 2.2vw; color: var(--muted); }

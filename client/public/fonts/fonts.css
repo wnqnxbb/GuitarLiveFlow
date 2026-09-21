@@ -1,0 +1,26 @@
+/*
+ * 大屏歌词可选的书法/楷体字体（自托管，见 client/scripts/build-fonts.sh 生成）
+ * 每个 @font-face 只在页面上真正用到该字体时才会下载对应 woff2，未选中的字体不会产生流量。
+ * 字形子集：GB2312 全部汉字与符号 + ASCII，覆盖绝大多数歌词；极生僻字会回退到系统字体。
+ */
+@font-face {
+  font-family: 'Ma Shan Zheng';
+  src: url('./mashanzheng.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Zhi Mang Xing';
+  src: url('./zhimangxing.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LXGW WenKai';
+  src: url('./wenkai.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

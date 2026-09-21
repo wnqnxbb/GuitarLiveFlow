@@ -39,6 +39,27 @@ export function isStageStyle(v: unknown): v is StageStyle {
   return typeof v === 'string' && STAGE_STYLES.some((s) => s.id === v);
 }
 
+/**
+ * 大屏歌词字体：
+ * - sans      系统默认黑体（不加载任何 web 字体）
+ * - mashan    马善政毛笔楷书
+ * - zhimang   志莽行书
+ * - wenkai    霞鹜文楷
+ * 字体文件自托管在 client/public/fonts/，只有被选中的字体才会下载。
+ */
+export type StageFont = 'sans' | 'mashan' | 'zhimang' | 'wenkai';
+
+export const STAGE_FONTS: readonly { id: StageFont; name: string; desc: string }[] = [
+  { id: 'sans', name: '默认黑体', desc: '系统默认黑体，最清晰、不消耗流量' },
+  { id: 'mashan', name: '毛笔楷书', desc: '马善政毛笔楷书：有笔锋又端正' },
+  { id: 'zhimang', name: '行书', desc: '志莽行书：飘逸潇洒，认读稍慢' },
+  { id: 'wenkai', name: '楷体', desc: '霞鹜文楷：印刷楷体，最好认' },
+];
+
+export function isStageFont(v: unknown): v is StageFont {
+  return typeof v === 'string' && STAGE_FONTS.some((s) => s.id === v);
+}
+
 /** 演出房间的实时状态，手机端是唯一写入方 */
 export interface RoomState {
   songId: number | null;
@@ -52,6 +73,8 @@ export interface RoomState {
   stageStyle: StageStyle;
   /** 是否跟随进度：开启后大屏高亮当前唱到的一句并显示进度条，关闭则纯展示 */
   follow: boolean;
+  /** 大屏歌词字体，手机端选择后同步给大屏 */
+  font: StageFont;
   updatedAt: number;
 }
 
@@ -63,6 +86,7 @@ export const DEFAULT_ROOM_STATE: RoomState = {
   transpose: 0,
   stageStyle: 'scroll',
   follow: false,
+  font: 'sans',
   updatedAt: 0,
 };
 

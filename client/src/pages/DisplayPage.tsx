@@ -33,6 +33,7 @@ export function DisplayPage() {
         activeIndex={room.state.lineIndex}
         variant={room.state.stageStyle}
         follow={room.state.follow}
+        font={room.state.font}
       />
     </div>
   );

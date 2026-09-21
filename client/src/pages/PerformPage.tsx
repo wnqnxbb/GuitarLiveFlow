@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { STAGE_STYLES } from '@shared/types';
+import { STAGE_FONTS, STAGE_STYLES } from '@shared/types';
 import { ChordSheet } from '../components/ChordSheet';
 import { SongPicker } from '../components/SongPicker';
 import { DisplayLinkDialog } from '../components/DisplayLinkDialog';
@@ -199,6 +199,19 @@ export function PerformPage() {
               {state.follow ? '开' : '关'}
             </button>
             <span className="tools__hint">开启后高亮当前唱到的一句并显示进度条</span>
+          </div>
+          <div className="tools__row">
+            <span>歌词字体</span>
+            {STAGE_FONTS.map((f) => (
+              <button
+                key={f.id}
+                className={`btn ${state.font === f.id ? 'btn--primary' : ''}`}
+                onClick={() => send({ font: f.id })}
+                title={f.desc}
+              >
+                {f.name}
+              </button>
+            ))}
           </div>
           <div className="tools__row">
             <button className="btn" onClick={() => setLine(0)}>
