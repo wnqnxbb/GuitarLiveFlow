@@ -18,12 +18,32 @@ export function seedIfEmpty() {
 }
 
 /**
- * 导入 seed 目录里「数据库还没有的」歌曲，按标题去重，可安全重复执行。
- * 返回本次导入的数量。
+ * 把 seed 目录里以 base 开头的图片挂到歌曲上。
+ * onlyIfEmpty=true 时，仅当这首歌当前一张图都没有才补图——避免把管理页里
+ * 手动删掉的单张图在下次部署时又「复活」。
+ */
+function attachSeedImages(songId: number, base: string, onlyIfEmpty: boolean) {
+  if (!seedDir) return;
+  const images = fs
+    .readdirSync(seedDir)
+    .filter((img) => /\.(jpe?g|png|webp)$/i.test(img) && img.startsWith(base));
+  if (images.length === 0) return;
+  if (onlyIfEmpty && (songsRepo.get(songId)?.images.length ?? 0) > 0) return;
+  for (const img of images) {
+    const target = `${songId}-seed-${img}`;
+    fs.copyFileSync(path.join(seedDir, img), path.join(config.uploadsDir, target));
+    songsRepo.addImage(songId, target);
+  }
+  console.log(`已补齐示例图片: ${base}（${images.length} 张）`);
+}
+
+/**
+ * 导入 seed 目录里「数据库还没有的」歌曲，并为缺图的歌补上同名示例图片。
+ * 按标题去重，可安全重复执行；返回本次新导入的歌曲数量。
  */
 export function seedMissing(): number {
   if (!seedDir) return 0;
-  const existing = new Set(songsRepo.list().map((s) => s.title));
+  const existing = new Map(songsRepo.list().map((s) => [s.title, s.id]));
   let imported = 0;
   for (const file of fs.readdirSync(seedDir)) {
     if (!file.endsWith('.cho')) continue;
@@ -31,24 +51,22 @@ export function seedMissing(): number {
     const base = path.basename(file, '.cho');
     const meta = parseChordPro(chordpro).meta;
     const title = meta.title || base;
-    // 已经被改过名或用管理页删过的歌不重复导入
-    if (existing.has(title)) continue;
-    const song = songsRepo.create({
-      title,
-      artist: meta.subtitle ?? '',
-      key: meta.key ?? '',
-      capo: meta.capo ?? 0,
-      chordpro,
-    });
-    for (const img of fs.readdirSync(seedDir)) {
-      if (!/\.(jpe?g|png|webp)$/i.test(img) || !img.startsWith(base)) continue;
-      const target = `${song.id}-seed-${img}`;
-      fs.copyFileSync(path.join(seedDir, img), path.join(config.uploadsDir, target));
-      songsRepo.addImage(song.id, target);
+    let songId = existing.get(title);
+    if (songId === undefined) {
+      const song = songsRepo.create({
+        title,
+        artist: meta.subtitle ?? '',
+        key: meta.key ?? '',
+        capo: meta.capo ?? 0,
+        chordpro,
+      });
+      songId = song.id;
+      existing.set(title, songId);
+      imported += 1;
+      console.log(`已导入示例歌曲: ${base}`);
     }
-    existing.add(title);
-    imported += 1;
-    console.log(`已导入示例歌曲: ${base}`);
+    // 已经被改过名或用管理页删过的歌不重复导入，但允许补上缺少的示例图片
+    attachSeedImages(songId, base, true);
   }
   return imported;
 }
