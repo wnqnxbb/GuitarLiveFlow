@@ -90,6 +90,7 @@ export interface BorderGlowProps {
   className?: string;
   edgeSensitivity?: number;
   glowColor?: string;
+  /** 不传时用 CSS 里的 --card-bg（便于跟随主题）；传了则写死在卡片上 */
   backgroundColor?: string;
   borderRadius?: number;
   glowRadius?: number;
@@ -109,7 +110,7 @@ export function BorderGlow({
   className = '',
   edgeSensitivity = 30,
   glowColor = '40 80 80',
-  backgroundColor = '#120F17',
+  backgroundColor,
   borderRadius = 28,
   glowRadius = 40,
   glowIntensity = 1.0,
@@ -210,10 +211,9 @@ export function BorderGlow({
   }, [animated]);
 
   const glowVars = buildGlowVars(glowColor, glowIntensity);
-  const lightSurface = isLightColor(backgroundColor);
+  const lightSurface = backgroundColor ? isLightColor(backgroundColor) : false;
 
   const styleVars: CSSProperties & Record<string, string | number> = {
-    '--card-bg': backgroundColor,
     '--edge-sensitivity': edgeSensitivity,
     '--border-radius': `${borderRadius}px`,
     '--glow-padding': `${glowRadius}px`,
@@ -222,6 +222,7 @@ export function BorderGlow({
     ...glowVars,
     ...buildGradientVars(colors),
   };
+  if (backgroundColor) styleVars['--card-bg'] = backgroundColor;
 
   return (
     <div

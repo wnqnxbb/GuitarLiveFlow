@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { SongSummary } from '@shared/types';
+import { BorderGlow } from './BorderGlow';
 import { Icon } from './Icon';
 import { api } from '../lib/api';
 
@@ -47,18 +48,30 @@ export function SongPicker({ value, onChange, onClose, variant = 'list' }: Props
         </div>
         <div className="picker__gallery">
           {!loading && !error && filtered.map((s) => (
-            <button
+            <BorderGlow
               key={s.id}
-              className={`song-card ${s.id === value ? 'is-active' : ''}`}
-              onClick={() => onChange(s.id)}
+              className={`song-card-glow ${s.id === value ? 'is-active' : ''}`}
+              edgeSensitivity={30}
+              glowColor="38 76 64"
+              borderRadius={14}
+              glowRadius={20}
+              glowIntensity={1}
+              coneSpread={25}
+              animated={false}
+              colors={['#c88636', '#e2b877', '#b3a181']}
             >
-              <span className="song-card__title">{s.title}</span>
-              <span className="song-card__artist">{s.artist || '未填写歌手'}</span>
-              <span className="song-card__tags">
-                {s.key && <em>{s.key} 调</em>}
-                {s.capo ? <em>Capo {s.capo}</em> : null}
-              </span>
-            </button>
+              <button
+                className={`song-card ${s.id === value ? 'is-active' : ''}`}
+                onClick={() => onChange(s.id)}
+              >
+                <span className="song-card__title">{s.title}</span>
+                <span className="song-card__artist">{s.artist || '未填写歌手'}</span>
+                <span className="song-card__tags">
+                  {s.key && <em>{s.key} 调</em>}
+                  {s.capo ? <em>Capo {s.capo}</em> : null}
+                </span>
+              </button>
+            </BorderGlow>
           ))}
           {(loading || error || filtered.length === 0) && <div className="picker__empty" role="status">{empty}{error && <button className="btn" onClick={() => setRetry((v) => v + 1)}>重试</button>}</div>}
         </div>
