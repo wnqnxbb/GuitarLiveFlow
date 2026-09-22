@@ -20,7 +20,6 @@ export function HomePage() {
         <section className="home__intro">
           <div className="home__strings" aria-hidden="true"><svg viewBox="0 0 800 400" fill="none">{Array.from({ length: 6 }, (_, i) => <path key={i} d={`M0 ${330 + i * 12} C220 ${70 + i * 18}, 500 ${430 + i * 8}, 800 ${-120 + i * 38}`} />)}</svg></div>
           <h1 className="home__title">声音幕布</h1>
-          <p className="home__sub">手机看谱，大屏看词，实时同步</p>
         </section>
         <div className="home__modes">
           <Link to="/perform" className="mode-card mode-card--stage" onMouseMove={moveSpotlight}>
@@ -33,7 +32,7 @@ export function HomePage() {
           </Link>
         </div>
         <button className="home__display" onClick={() => setJoining(true)}><span className="home__display-icon"><Icon name="monitor" size={34} /></span><span><strong>大屏歌词</strong><small>输入手机端生成的 6 位密钥，让歌词登场</small></span><Icon name="arrow" /></button>
-        <footer className="home__footer"><span>每一次弹唱，都值得被看见。</span><span className="footer-strings" aria-hidden="true">│ │ │ │ │ │</span></footer>
+        <footer className="home__footer"><span className="footer-strings" aria-hidden="true">│ │ │ │ │ │</span></footer>
       </div>
       {joining && <DisplayJoinDialog onClose={() => setJoining(false)} />}
     </main>
