@@ -8,11 +8,22 @@
 #   bash deploy/deploy-local.sh
 set -euo pipefail
 
-HOST=root@SERVER_IP
 APP_DIR=/opt/guitar-live-flow
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$REPO_ROOT"
+
+# 服务器地址不要写进仓库：放到被 gitignore 的 deploy/.env.deploy 里
+# （内容形如 DEPLOY_HOST=root@1.2.3.4），或用环境变量 DEPLOY_HOST 传入。
+if [ -f "$REPO_ROOT/deploy/.env.deploy" ]; then
+  # shellcheck disable=SC1091
+  . "$REPO_ROOT/deploy/.env.deploy"
+fi
+HOST="${DEPLOY_HOST:-}"
+if [ -z "$HOST" ]; then
+  echo "错误：未配置部署服务器。请把 deploy/.env.deploy.example 复制为 deploy/.env.deploy 并填写 DEPLOY_HOST，或先 export DEPLOY_HOST=root@<服务器 IP>" >&2
+  exit 1
+fi
 
 if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   echo "==> 提示：本地有未提交的改动，将按工作区当前内容部署（不影响 git 历史）"

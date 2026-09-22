@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GuitarLiveFlow 部署/更新脚本（服务器端）
-# 环境：阿里云 CentOS 8 + Nginx(复用 *.example.com 证书) + systemd 原生 Node 部署
+# 环境：CentOS 8 + Nginx(复用服务器上已有的 HTTPS 证书) + systemd 原生 Node 部署
 #
 # 流程：（代码已由本地 rsync 同步好）-> 依赖没变就跳过（装依赖/编译 better-sqlite3）
 #       -> 构建 -> 重启 -> 补 seed -> 健康检查
@@ -12,7 +12,7 @@
 # 是否需要重建前端/后端由本地 rsync 后的变更文件判断，通过环境变量传入：
 #   NEED_CLIENT=0|1  NEED_SERVER=0|1（未传时默认都当作 1，保守全量构建）
 #
-# 用法：ssh root@SERVER_IP "NEED_CLIENT=1 NEED_SERVER=1 bash /root/deploy-guitar.sh"
+# 用法：ssh <服务器地址> "NEED_CLIENT=1 NEED_SERVER=1 bash /root/deploy-guitar.sh"
 # （一般不用手动传参，由 deploy/deploy-local.sh 自动算好并传入）
 set -euo pipefail
 

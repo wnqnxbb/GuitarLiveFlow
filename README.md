@@ -128,10 +128,13 @@ Caddy 会自动申请 HTTPS 证书，WebSocket 一并转发。数据库和上传
 
 更新版本：`git pull && docker compose up -d --build`。
 
-### 阿里云生产机（systemd 原生部署）
+### 生产机（systemd 原生部署）
 
 线上一台跑的不是 Docker，而是 systemd + 原生 Node：目录 `/opt/guitar-live-flow`，服务名
-`guitar-live-flow`，由 Nginx 复用 `*.example.com` 证书反代到 `127.0.0.1:3000`。
+`guitar-live-flow`，由 Nginx 复用服务器上已有的 HTTPS 证书反代到 `127.0.0.1:3000`。
+
+服务器地址（IP / 域名）不写进仓库。首次部署前，把 `deploy/.env.deploy.example` 复制为
+`deploy/.env.deploy`（已被 gitignore）并填入 `DEPLOY_HOST`，或临时 `export DEPLOY_HOST=root@<服务器 IP>`。
 
 一键部署（在本机仓库根目录执行，不用手动 ssh 上服务器）：
 
@@ -151,7 +154,7 @@ GitHub，但服务器到 GitHub 的连通性经常超时/无响应，改成本�
 `deploy/deploy-server.sh` 后记得 `scp` 同步到服务器 `/root/deploy-guitar.sh`：
 
 ```bash
-scp deploy/deploy-server.sh root@SERVER_IP:/root/deploy-guitar.sh
+scp deploy/deploy-server.sh "$DEPLOY_HOST":/root/deploy-guitar.sh
 ```
 
 进一步提速（2026-09-20 后）：
@@ -161,7 +164,7 @@ scp deploy/deploy-server.sh root@SERVER_IP:/root/deploy-guitar.sh
   server `tsc`，只改 `server/` 时不跑 vite；
 - 重启后用轮询 `/api/health` 代替固定 `sleep 2`；`seed/` 目录内容未变化时跳过导入。
 
-实测（2 vCPU 阿里云 ECS，一次改代码的完整部署）：优化前约 15s，优化后全量重建约 8s、
+实测（2 vCPU 云服务器，一次改代码的完整部署）：优化前约 15s，优化后全量重建约 8s、
 只改前端约 5s。
 
 ## 演出现场建议
