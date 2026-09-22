@@ -15,19 +15,21 @@ interface Props {
   follow?: boolean;
   /** 歌词字体，由手机端选择并通过房间状态同步 */
   font?: StageFont;
+  /** 尚未开唱（前奏/等待）时的占位文案，例如歌名；不传则用默认提示 */
+  placeholder?: string;
 }
 
 /**
  * 大屏歌词。只展示歌词，纯和弦的前奏/间奏不出现；遇到间奏时继续高亮上一句歌词。
  * 具体样式由 variant 决定，新增样式只需在这里加一个分支 + 一个子组件。
  */
-export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow, font }: Props) {
+export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow, font, placeholder }: Props) {
   const lyricLines = song?.lines.filter((l) => !l.instrumental && l.lyrics.trim() !== '') ?? [];
 
   if (!song || lyricLines.length === 0) {
     return (
       <div className="stage stage--idle">
-        <div className="stage__title">{title ?? '等待开始'}</div>
+        <div className="stage__title">{placeholder ?? title ?? '等待开始'}</div>
       </div>
     );
   }
@@ -57,6 +59,7 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
       lyricLines={lyricLines}
       activePos={activePos}
       title={title}
+      placeholder={placeholder}
       progress={progress}
       context={context}
       font={font}
@@ -69,6 +72,7 @@ interface InnerProps {
   activePos: number;
   title?: string;
   progress: number;
+  placeholder?: string;
 }
 
 /**
@@ -103,9 +107,9 @@ function CurtainStage({
 }
 
 /** 样式一：滚动逐句。当前句居中放大，前后几句变淡 */
-function ScrollStage({ lyricLines, activePos, title, progress, context, font }: InnerProps & { context: number; font?: StageFont }) {
+function ScrollStage({ lyricLines, activePos, title, progress, context, font, placeholder }: InnerProps & { context: number; font?: StageFont }) {
   if (activePos < 0) {
-    return <div className="stage stage--idle" style={{ fontFamily: lyricFontFamily(font) }}><div className="stage__title">{title ?? '前奏 · 等待开唱'}</div></div>;
+    return <div className="stage stage--idle" style={{ fontFamily: lyricFontFamily(font) }}><div className="stage__title">{placeholder ?? title ?? '前奏 · 等待开唱'}</div></div>;
   }
   const items: { index: number; text: string; offset: number }[] = [];
   for (let off = -context; off <= context; off++) {
