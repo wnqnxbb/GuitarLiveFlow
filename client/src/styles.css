@@ -122,7 +122,6 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 
 /* ---- 声音幕布：首页视觉系统 ---- */
 .home { position: relative; padding: 38px 6vw 24px; overflow: hidden; background: #f6f4ef; }
-.home__prism { position: absolute; inset: 0; z-index: 0; opacity: .5; mix-blend-mode: multiply; pointer-events: none; }
 .home__inner { position: relative; z-index: 1; width: 100%; max-width: 1120px; margin: auto; }
 .home__brand { display: flex; align-items: center; gap: 14px; font-size: 19px; font-weight: 650; letter-spacing: .1em; }
 .brand-strings { width: 28px; height: 25px; background: repeating-linear-gradient(to bottom, #49463e 0 1px, transparent 1px 5px); }

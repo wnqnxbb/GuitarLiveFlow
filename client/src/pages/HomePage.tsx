@@ -2,7 +2,6 @@ import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { DisplayJoinDialog } from '../components/DisplayJoinDialog';
 import { Icon } from '../components/Icon';
-import Prism from '../components/Prism/Prism';
 
 /** 聚光位置只写 CSS 变量，避免指针移动触发 React 重渲染。 */
 function moveSpotlight(event: MouseEvent<HTMLAnchorElement>) {
@@ -16,21 +15,6 @@ export function HomePage() {
   const [joining, setJoining] = useState(false);
   return (
     <main className="page home">
-      <div className="home__prism" aria-hidden="true">
-        <Prism
-          animationType="rotate"
-          timeScale={0.35}
-          height={3.2}
-          baseWidth={5.5}
-          scale={3.4}
-          hueShift={0.35}
-          colorFrequency={0.9}
-          noise={0.25}
-          glow={0.8}
-          transparent
-          suspendWhenOffscreen
-        />
-      </div>
       <div className="home__inner">
         <header className="home__brand"><span className="brand-strings" aria-hidden="true" /><span>声音幕布</span></header>
         <section className="home__intro">
