@@ -313,7 +313,6 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 }
 .stage__line.is-active { font-size: 7.2vw; color: var(--fg); opacity: 1; font-weight: 700; transform: scale(1); }
 .stage__line.is-past { opacity: .3; }
-.stage__progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width .3s; }
 @media (orientation: portrait) {
   .stage__line { font-size: 6vw; }
   .stage__line.is-active { font-size: 9.5vw; }

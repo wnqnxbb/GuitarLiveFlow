@@ -11,7 +11,7 @@ interface Props {
   context?: number;
   /** 展示样式，见 shared/types.ts 的 STAGE_STYLES */
   variant?: StageStyle;
-  /** 是否跟随进度：开启后门帘样式高亮当前句并显示进度条 */
+  /** 是否跟随进度：开启后门帘样式高亮当前句 */
   follow?: boolean;
   /** 歌词字体，由手机端选择并通过房间状态同步 */
   font?: StageFont;
@@ -41,14 +41,11 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
     else break;
   }
 
-  const progress = ((activeIndex + 1) / song.lines.length) * 100;
-
   if (variant === 'curtain') {
     return (
       <CurtainStage
         lyricLines={lyricLines}
         activePos={activePos}
-        progress={progress}
         follow={follow}
         font={font}
       />
@@ -60,7 +57,6 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
       activePos={activePos}
       title={title}
       placeholder={placeholder}
-      progress={progress}
       context={context}
       font={font}
     />
@@ -71,18 +67,16 @@ interface InnerProps {
   lyricLines: Line[];
   activePos: number;
   title?: string;
-  progress: number;
   placeholder?: string;
 }
 
 /**
  * 样式二：门帘全量。整首歌词一句一列、从上往下竖排，列与列从右往左铺满整屏。
- * follow 开启时高亮当前句并显示进度条，关闭则纯展示。
+ * follow 开启时高亮当前句，关闭则纯展示。
  */
 function CurtainStage({
   lyricLines,
   activePos,
-  progress,
   follow,
   font,
 }: InnerProps & { follow?: boolean; font?: StageFont }) {
@@ -101,13 +95,12 @@ function CurtainStage({
           </div>
         ))}
       </div>
-      {follow && <div className="stage__progress" style={{ width: `${progress}%` }} />}
     </div>
   );
 }
 
 /** 样式一：滚动逐句。当前句居中放大，前后几句变淡 */
-function ScrollStage({ lyricLines, activePos, title, progress, context, font, placeholder }: InnerProps & { context: number; font?: StageFont }) {
+function ScrollStage({ lyricLines, activePos, title, context, font, placeholder }: InnerProps & { context: number; font?: StageFont }) {
   if (activePos < 0) {
     return <div className="stage stage--idle" style={{ fontFamily: lyricFontFamily(font) }}><div className="stage__title">{placeholder ?? title ?? '前奏 · 等待开唱'}</div></div>;
   }
@@ -131,7 +124,6 @@ function ScrollStage({ lyricLines, activePos, title, progress, context, font, pl
           </div>
         ))}
       </div>
-      <div className="stage__progress" style={{ width: `${progress}%` }} />
     </div>
   );
 }

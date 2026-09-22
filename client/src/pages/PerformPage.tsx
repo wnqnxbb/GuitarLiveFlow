@@ -249,7 +249,7 @@ export function PerformPage() {
             >
               {state.follow ? '开' : '关'}
             </button>
-            <span className="tools__hint">开启后高亮当前唱到的一句并显示进度条</span>
+            <span className="tools__hint">开启后高亮当前唱到的一句</span>
           </div>
           <div className="tools__row">
             <span>歌词字体</span>
