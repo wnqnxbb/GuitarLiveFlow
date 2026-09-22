@@ -33,6 +33,10 @@ rsync -az \
   client server shared seed package.json package-lock.json \
   "$HOST:$APP_DIR/" | tee "$RSYNC_LOG"
 
+# seed 单独再同步一次并带 --delete：谱子改名/删除后，服务器上残留的旧文件会被清掉，
+# 否则 seed 会把改名前的旧谱子当成「新增歌曲」再导入一份（曾踩过）。
+rsync -az --delete --exclude '.DS_Store' seed "$HOST:$APP_DIR/"
+
 # 按本次实际同步的文件路径判断要不要重建前端/后端，取代原来的 git diff 判断
 NEED_CLIENT=0
 NEED_SERVER=0
