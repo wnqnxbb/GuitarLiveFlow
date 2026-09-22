@@ -135,6 +135,11 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 .mode-card--stage { background: #24231f; color: #faf7ef; border-color: #24231f; }
 .mode-card--stage::after { content: ''; position: absolute; width: 170px; height: 200px; top: -50px; right: 35px; background: #bb823f; filter: blur(90px); opacity: .16; z-index: -1; }
 .mode-card--practice { background: #fffcf7; animation-delay: .23s; }
+/* 电脑练习卡：外层 BorderGlow 负责光晕描边，内层 Link 只保留排版 */
+.mode-card-glow { min-width: 0; transition: transform .24s; animation: enter .65s .23s both; }
+.mode-card-glow .mode-card { border: 0; background: transparent; overflow: visible; animation: none; }
+.mode-card-glow .mode-card::before { content: none; }
+.mode-card-glow .border-glow-inner { overflow: visible; }
 .mode-card__copy { position: relative; z-index: 1; }
 .mode-card h2 { font-size: clamp(25px, 2.5vw, 34px); margin: 0 0 13px; font-weight: 650; letter-spacing: -.03em; }
 .mode-card p { color: #736e63; font-size: 15px; margin: 0; }
@@ -157,6 +162,8 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 @media (hover: hover) {
   .mode-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px #302a1810; }
   .mode-card:hover::before { opacity: 1; }
+  .mode-card-glow:hover { transform: translateY(-3px); }
+  .mode-card-glow .mode-card:hover { transform: none; box-shadow: none; }
   .mode-card:hover .mode-card__action svg { transform: translateX(3px); }
   .home__display:hover { background: #fffcf7; border-color: #c88636; }
 }

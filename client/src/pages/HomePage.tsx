@@ -1,6 +1,7 @@
 import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { DisplayJoinDialog } from '../components/DisplayJoinDialog';
+import { BorderGlow } from '../components/BorderGlow';
 import { Icon } from '../components/Icon';
 
 /** 聚光位置只写 CSS 变量，避免指针移动触发 React 重渲染。 */
@@ -26,10 +27,23 @@ export function HomePage() {
             <div className="mode-card__copy"><h2>手机演出</h2><p>和弦 + 歌词，控制大屏</p><span className="mode-card__action">开始演出<Icon name="arrow" size={19} /></span></div>
             <div className="mode-card__art phone-art" aria-hidden="true"><div className="phone-art__speaker" /><span>C</span><i /><span>Am</span><i /><span>F</span><i /><div className="phone-art__home" /></div>
           </Link>
-          <Link to="/practice" className="mode-card mode-card--practice" onMouseMove={moveSpotlight}>
-            <div className="mode-card__copy"><h2>电脑练习</h2><p>词谱 + 原图，本地控制</p><span className="mode-card__action">开始练习<Icon name="arrow" size={19} /></span></div>
-            <div className="mode-card__art practice-art" aria-hidden="true"><Icon name="guitar" size={124} /><span className="practice-art__lines" /></div>
-          </Link>
+          <BorderGlow
+            className="mode-card-glow"
+            edgeSensitivity={32}
+            glowColor="38 76 64"
+            backgroundColor="#fffcf7"
+            borderRadius={18}
+            glowRadius={34}
+            glowIntensity={1}
+            coneSpread={26}
+            animated={false}
+            colors={['#c88636', '#e2b877', '#b3a181']}
+          >
+            <Link to="/practice" className="mode-card mode-card--practice">
+              <div className="mode-card__copy"><h2>电脑练习</h2><p>词谱 + 原图，本地控制</p><span className="mode-card__action">开始练习<Icon name="arrow" size={19} /></span></div>
+              <div className="mode-card__art practice-art" aria-hidden="true"><Icon name="guitar" size={124} /><span className="practice-art__lines" /></div>
+            </Link>
+          </BorderGlow>
         </div>
         <button className="home__display" onClick={() => setJoining(true)}><span className="home__display-icon"><Icon name="monitor" size={34} /></span><span><strong>大屏歌词</strong><small>输入手机端生成的 6 位密钥，让歌词登场</small></span><Icon name="arrow" /></button>
       </div>
