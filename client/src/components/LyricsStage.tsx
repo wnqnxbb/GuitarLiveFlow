@@ -32,8 +32,8 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
     );
   }
 
-  // 当前行号映射到最近的一句歌词：间奏时停留在上一句，前奏时提前显示第一句
-  let activePos = 0;
+  // 当前行号映射到最近的一句歌词：间奏时停留在上一句，尚未开唱时不提前高亮
+  let activePos = -1;
   for (let i = 0; i < lyricLines.length; i++) {
     if (lyricLines[i].index <= activeIndex) activePos = i;
     else break;
@@ -104,6 +104,9 @@ function CurtainStage({
 
 /** 样式一：滚动逐句。当前句居中放大，前后几句变淡 */
 function ScrollStage({ lyricLines, activePos, title, progress, context, font }: InnerProps & { context: number; font?: StageFont }) {
+  if (activePos < 0) {
+    return <div className="stage stage--idle" style={{ fontFamily: lyricFontFamily(font) }}><div className="stage__title">{title ?? '前奏 · 等待开唱'}</div></div>;
+  }
   const items: { index: number; text: string; offset: number }[] = [];
   for (let off = -context; off <= context; off++) {
     const pos = activePos + off;

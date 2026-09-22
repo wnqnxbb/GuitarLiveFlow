@@ -81,8 +81,8 @@ export function markAlive(ws: WebSocket) {
 function sanitize(patch: Partial<RoomState>): Partial<RoomState> {
   const out: Partial<RoomState> = {};
   if (patch.songId === null || (typeof patch.songId === 'number' && Number.isInteger(patch.songId))) out.songId = patch.songId;
-  if (typeof patch.lineIndex === 'number' && Number.isFinite(patch.lineIndex)) out.lineIndex = Math.max(0, Math.floor(patch.lineIndex));
-  if (patch.mode === 'manual' || patch.mode === 'auto') out.mode = patch.mode;
+  if (typeof patch.lineIndex === 'number' && Number.isFinite(patch.lineIndex)) out.lineIndex = Math.max(-1, Math.floor(patch.lineIndex));
+  if (patch.mode === 'manual' || patch.mode === 'auto' || patch.mode === 'timeline') out.mode = patch.mode;
   if (typeof patch.secondsPerLine === 'number' && patch.secondsPerLine > 0) out.secondsPerLine = Math.min(60, patch.secondsPerLine);
   if (typeof patch.transpose === 'number' && Number.isInteger(patch.transpose)) out.transpose = Math.max(-11, Math.min(11, patch.transpose));
   if (isStageStyle(patch.stageStyle)) out.stageStyle = patch.stageStyle;

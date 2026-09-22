@@ -62,9 +62,10 @@ export function useRoom(code: string | null, role: ClientRole): RoomConnection {
         } catch {
           return;
         }
-        if (msg.type === 'state') setState(msg.state);
+        // 控制端保留本地最新行号，避免服务器回显旧帧覆盖刚完成的校准。
+        if (msg.type === 'state' && role !== 'controller') setState(msg.state);
         else if (msg.type === 'presence') setPresence({ controllers: msg.controllers, displays: msg.displays });
-        else if (msg.type === 'song_updated') setSongVersion((v) => v + 1);
+        else if (msg.type === 'song_updated' && code === `song-${msg.songId}`) setSongVersion((v) => v + 1);
       };
       ws.onclose = () => {
         setConnected(false);
@@ -87,7 +88,8 @@ export function useRoom(code: string | null, role: ClientRole): RoomConnection {
 
   const send = useCallback((patch: Partial<RoomState>) => {
     // 本地先更新，界面不等服务器回包
-    setState((s) => ({ ...s, ...patch, updatedAt: Date.now() }));
+    stateRef.current = { ...stateRef.current, ...patch, updatedAt: Date.now() };
+    setState(stateRef.current);
     const ws = wsRef.current;
     if (ws && ws.readyState === ws.OPEN) {
       ws.send(JSON.stringify({ type: 'state', state: patch }));

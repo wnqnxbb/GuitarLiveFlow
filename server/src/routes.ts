@@ -10,7 +10,8 @@ import { createDisplayShares } from './display-shares.js';
 import { checkPassword, clearAdminCookie, isAdmin, requireAdmin, setAdminCookie } from './auth.js';
 import { broadcastAll, getRoom, markAlive, startHeartbeat } from './room.js';
 import { parseChordPro } from '../../shared/chordpro.js';
-import type { ClientMessage, ClientRole } from '../../shared/types.js';
+import { timelineError } from '../../shared/timeline.js';
+import type { ClientMessage, ClientRole, SongTimeline } from '../../shared/types.js';
 
 /** 同步房间号：每首歌一个房间，形如 song-12，由客户端按歌曲 id 生成 */
 const ROOM_KEY_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -130,6 +131,17 @@ export async function registerRoutes(app: FastifyInstance) {
     if (!song) return reply.code(404).send({ error: '歌曲不存在' });
     broadcastAll({ type: 'song_updated', songId: song.id });
     return song;
+  });
+
+  /** 保存排练时间轴，沿用歌曲管理权限，拒绝旧词谱和不完整打点。 */
+  app.put<{ Params: { id: string } }>('/api/songs/:id/timeline', { preHandler: requireAdmin }, async (req, reply) => {
+    const song = songsRepo.get(Number(req.params.id));
+    if (!song) return reply.code(404).send({ error: '歌曲不存在' });
+    const error = timelineError(req.body, song.chordpro, parseChordPro(song.chordpro).lines.length);
+    if (error) return reply.code(400).send({ error });
+    const updated = songsRepo.saveTimeline(song.id, req.body as SongTimeline);
+    broadcastAll({ type: 'song_updated', songId: song.id });
+    return updated;
   });
 
   app.delete<{ Params: { id: string } }>('/api/songs/:id', { preHandler: requireAdmin }, async (req) => {

@@ -1,4 +1,4 @@
-import type { DisplayShare, SongDetail, SongImage, SongSummary } from '@shared/types';
+import type { DisplayShare, SongDetail, SongImage, SongSummary, SongTimeline } from '@shared/types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -38,6 +38,7 @@ export const api = {
   getSong: (id: number) => request<SongDetail>(`/api/songs/${id}`),
   createSong: (p: SongPayload) => request<SongDetail>('/api/songs', { method: 'POST', body: JSON.stringify(p) }),
   updateSong: (id: number, p: SongPayload) => request<SongDetail>(`/api/songs/${id}`, { method: 'PUT', body: JSON.stringify(p) }),
+  saveTimeline: (id: number, timeline: SongTimeline) => request<SongDetail>(`/api/songs/${id}/timeline`, { method: 'PUT', body: JSON.stringify(timeline) }),
   deleteSong: (id: number) => request<{ ok: true }>(`/api/songs/${id}`, { method: 'DELETE' }),
 
   async uploadImage(songId: number, file: File): Promise<SongImage> {

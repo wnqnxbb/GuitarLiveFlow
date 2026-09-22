@@ -1,0 +1,12 @@
+/* 演出控制常驻底部，手机上无需展开设置即可暂停和校准。 */
+.timeline-controls { flex: none; padding: 10px 14px calc(10px + var(--safe-bottom)); border-top: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; gap: 8px; }
+.timeline-controls__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.timeline-controls__status { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.timeline-controls button { min-height: 42px; }
+.timeline-controls select { padding: 8px; background: var(--card); color: var(--fg); border: 1px solid var(--border); border-radius: 8px; }
+.timeline-editor__actions { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.timeline-editor__lines { max-height: 45dvh; overflow-y: auto; margin-top: 14px; }
+.timeline-editor__line { display: grid; grid-template-columns: minmax(0, 1fr) 100px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.timeline-editor__line span { min-width: 0; overflow-wrap: anywhere; }
+.timeline-editor__line input { width: 100%; min-width: 0; }
+.timeline-editor__actions label { display: grid; gap: 8px; }

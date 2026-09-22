@@ -22,12 +22,19 @@ export interface SongImage {
   sort: number;
 }
 
+/** 每行相对演出起点的开始秒数；source 用于防止词谱修改后错配旧时间轴。 */
+export interface SongTimeline {
+  source: string;
+  times: number[];
+}
+
 export interface SongDetail extends SongSummary {
   chordpro: string;
   images: SongImage[];
+  timeline: SongTimeline | null;
 }
 
-export type ScrollMode = 'manual' | 'auto';
+export type ScrollMode = 'manual' | 'auto' | 'timeline';
 
 /**
  * 大屏展示样式：

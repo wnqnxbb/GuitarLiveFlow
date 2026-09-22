@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { STAGE_FONTS, STAGE_STYLES } from '@shared/types';
 import { Icon } from '../components/Icon';
 import { ChordSheet } from '../components/ChordSheet';
+import { TimelineEditor } from '../components/TimelineEditor';
+import { usePerformanceTimeline } from '../lib/usePerformanceTimeline';
+import '../components/timeline.css';
 import { SongPicker } from '../components/SongPicker';
 import { DisplayLinkDialog } from '../components/DisplayLinkDialog';
 import { useRoom } from '../lib/useRoom';
@@ -40,17 +43,23 @@ export function PerformPage() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
   const total = sheet?.lines.length ?? 0;
+  const timing = usePerformanceTimeline(song?.id === songId ? song : null, send);
+  const timed = timing.status === 'playing' || timing.status === 'paused';
   const setLine = useCallback(
     (idx: number) => {
       if (total === 0) return;
-      send({ lineIndex: Math.max(0, Math.min(total - 1, idx)) });
+      const target = Math.max(0, Math.min(total - 1, idx));
+      if (timed) timing.calibrate(target);
+      else send({ lineIndex: target });
     },
-    [send, total],
+    [send, total, timed, timing.calibrate],
   );
-  const next = useCallback(() => setLine(state.lineIndex + 1), [setLine, state.lineIndex]);
-  const prev = useCallback(() => setLine(state.lineIndex - 1), [setLine, state.lineIndex]);
+  const next = () => timing.status === 'recording' ? timing.mark(1, total) : setLine(state.lineIndex + 1);
+  const prev = () => timing.status === 'recording' ? timing.mark(-1, total) : setLine(state.lineIndex - 1);
 
-  useKeyboardNav(next, prev, { Escape: () => setShowTools((v) => !v) });
+  useKeyboardNav(next, prev, {
+    s: () => { if (timing.status === 'playing') timing.pause(); else if (timing.status === 'paused') timing.play(); },
+    Escape: () => setShowTools((v) => !v) });
   useAutoAdvance(state.mode === 'auto' && total > 0, state.secondsPerLine, () => {
     if (state.lineIndex >= total - 1) send({ mode: 'manual' });
     else next();
@@ -98,12 +107,13 @@ export function PerformPage() {
   return (
     <div className="page page--dark perform">
       <header className="bar bar--overlay">
-        <button className="btn btn--ghost" onClick={() => setShowPicker(true)}>
+        <button className="btn btn--ghost" onClick={() => { timing.stop(); setShowPicker(true); }}>
           ♪ {song?.title ?? '选歌'}
         </button>
         <span className="bar__meta">
           {state.lineIndex + 1}/{total}
           {state.mode === 'auto' && ' · 自动'}
+          {timing.status === 'playing' && ' · 时间轴'}
           {state.transpose !== 0 && ` · ${state.transpose > 0 ? '+' : ''}${state.transpose}`}
         </span>
         <span className="bar__status">
@@ -128,6 +138,45 @@ export function PerformPage() {
         )}
         <div className="perform__spacer" />
       </div>
+
+      <div className="timeline-controls" aria-label="时间轴演出控制">
+        <div className="timeline-controls__status" role="status">
+          {timing.status === 'recording'
+            ? `录制中 · ${timing.elapsed.toFixed(1)} 秒 · 已打点 ${timing.draft.length}/${total} 行`
+            : timing.saved ? `逐句时间轴 · ${timing.elapsed.toFixed(1)} 秒${timing.status === 'paused' ? ' · 已暂停' : ''}` : '还没有时间轴 · 先听一次排练录音，逐行打点'}
+        </div>
+        <div className="timeline-controls__row">
+          {timing.status === 'recording' ? <>
+            <button className="btn" onClick={prev} disabled={!timing.draft.length}>撤回打点</button>
+            <button className="btn btn--primary" onClick={next}>第 {timing.draft.length + 1} 行开始</button>
+            <button className="btn" onClick={() => { timing.stop(); timing.setEditorOpen(true); }}>结束录制</button>
+          </> : <>
+            <button className="btn" onClick={prev} disabled={state.lineIndex <= 0}>上一句</button>
+            <button className="btn" onClick={next} disabled={state.lineIndex >= total - 1}>下一句</button>
+            {timing.saved && <>
+              <button className="btn btn--primary" onClick={() => { if (timing.status === 'playing') timing.pause(); else { setShowTools(false); timing.play(); } }}>
+                {timing.status === 'playing' ? '暂停' : timing.status === 'paused' ? '继续' : '按时间轴开始'}
+              </button>
+              {timed && <button className="btn" onClick={() => timing.calibrate(Math.max(0, state.lineIndex))}>对齐本句开头</button>}
+              <select aria-label="演唱速度" value={timing.speed} onChange={(e) => timing.changeSpeed(Number(e.target.value))}>
+                {[0.8, 0.9, 1, 1.1, 1.2].map((rate) => <option key={rate} value={rate}>{rate} 倍速</option>)}
+              </select>
+            </>}
+            <button className="btn" disabled={!song || song.id !== songId || !sheet || !total} onClick={() => {
+              timing.stop(); setShowTools(false); timing.setEditorOpen(true);
+            }}>打点 / 编辑</button>
+          </>}
+        </div>
+        {timing.status === 'recording' && <p className="tools__hint">到每行开头时点击打点，纯和弦行也要记录。点屏幕下方或踩下一页同样有效。</p>}
+        {timed && <p className="tools__hint">上一句 / 下一句会重新对齐后续计时；S 键暂停或继续。</p>}
+        {timing.notice && <p role="alert" className="tools__hint">{timing.notice}</p>}
+      </div>
+
+      {timing.editorOpen && song && sheet && <TimelineEditor
+        song={song} parsed={sheet} draft={timing.draft} onChange={timing.updateDraft}
+        onSaved={timing.setSaved} onClose={() => timing.setEditorOpen(false)}
+        onRecord={() => { setShowTools(false); timing.record(); }}
+      />}
 
       {showDisplayLink && songId !== null && (
         <DisplayLinkDialog songId={songId} songTitle={song?.title} onClose={() => setShowDisplayLink(false)} />
@@ -164,10 +213,10 @@ export function PerformPage() {
             </button>
           </div>
           <div className="tools__row">
-            <span>自动</span>
+            <span>等时自动</span>
             <button
               className={`btn ${state.mode === 'auto' ? 'btn--primary' : ''}`}
-              onClick={() => send({ mode: state.mode === 'auto' ? 'manual' : 'auto' })}
+              onClick={() => { timing.stop(); send({ mode: state.mode === 'auto' ? 'manual' : 'auto' }); }}
             >
               {state.mode === 'auto' ? '暂停' : '开始'}
             </button>
@@ -216,7 +265,7 @@ export function PerformPage() {
             ))}
           </div>
           <div className="tools__row">
-            <button className="btn" onClick={() => setLine(0)}>
+            <button className="btn" onClick={() => { timing.stop(); send({ lineIndex: 0 }); }}>
               回到开头
             </button>
             <button className="btn" onClick={toggleFullscreen}>
