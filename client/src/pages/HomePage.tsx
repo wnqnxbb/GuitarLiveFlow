@@ -32,7 +32,6 @@ export function HomePage() {
           </Link>
         </div>
         <button className="home__display" onClick={() => setJoining(true)}><span className="home__display-icon"><Icon name="monitor" size={34} /></span><span><strong>大屏歌词</strong><small>输入手机端生成的 6 位密钥，让歌词登场</small></span><Icon name="arrow" /></button>
-        <footer className="home__footer"><span className="footer-strings" aria-hidden="true">│ │ │ │ │ │</span></footer>
       </div>
       {joining && <DisplayJoinDialog onClose={() => setJoining(false)} />}
     </main>

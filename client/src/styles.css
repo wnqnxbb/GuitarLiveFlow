@@ -154,8 +154,6 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
 .home__display strong { display: block; font-size: 20px; font-weight: 600; }
 .home__display small { display: block; color: #736e63; font-size: 14px; margin-top: 8px; }
 .home__display > svg:last-child { margin-left: auto; flex-shrink: 0; }
-.home__footer { display: flex; align-items: center; justify-content: flex-end; padding-top: 35px; font-size: 12px; letter-spacing: .12em; color: #898274; }
-.footer-strings { opacity: .55; }
 @media (hover: hover) {
   .mode-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px #302a1810; }
   .mode-card:hover::before { opacity: 1; }
@@ -190,7 +188,6 @@ code { background: rgba(0,0,0,.06); padding: 0 .3em; border-radius: 4px; }
   .home__display strong { font-size: 17px; }
   .home__display small { font-size: 12px; line-height: 1.7; max-width: 190px; }
   .home__display-icon svg { width: 27px; }
-  .home__footer { padding-top: 26px; font-size: 10px; letter-spacing: .04em; }
 }
 
 /* ---- 选歌 ---- */
@@ -507,5 +504,4 @@ button svg, a svg { flex-shrink: 0; }
   .phone-art { height: 173px; top: 35px; }
   .phone-art i { margin-bottom: 12px; }
   .home__display { padding-block: 20px; }
-  .home__footer { padding-top: 22px; }
 }
