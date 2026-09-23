@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DisplayJoinDialog } from '../components/DisplayJoinDialog';
 import { LyricsStage } from '../components/LyricsStage';
+import { warmupLyricFonts } from '../lib/fonts';
 import { useRoom } from '../lib/useRoom';
 import { useFullscreen, useSong, useWakeLock } from '../lib/hooks';
 
@@ -18,6 +20,11 @@ export function DisplayPage() {
   const { song, parsed } = useSong(songId, room.songVersion);
   const { toggle } = useFullscreen();
   useWakeLock(true);
+
+  // 手机端切字体时大屏不应再等字体下载：空闲时提前把 5 个书法字体拉好
+  useEffect(() => {
+    warmupLyricFonts();
+  }, []);
 
   if (songId === null) {
     return (
