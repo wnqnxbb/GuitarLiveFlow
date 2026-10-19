@@ -1,7 +1,8 @@
-import type { CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import type { Line, ParsedSong } from '@shared/chordpro';
 import type { StageFont, StageStyle } from '@shared/types';
 import { lyricFontFamily } from '../lib/fonts';
+import { LyricWallStage } from './LyricWallStage';
 
 interface Props {
   song: ParsedSong | null;
@@ -24,7 +25,8 @@ interface Props {
  * 具体样式由 variant 决定，新增样式只需在这里加一个分支 + 一个子组件。
  */
 export function LyricsStage({ song, activeIndex, title, context = 2, variant = 'scroll', follow, font, placeholder }: Props) {
-  const lyricLines = song?.lines.filter((l) => !l.instrumental && l.lyrics.trim() !== '') ?? [];
+  // 歌词集合只随歌曲变化，避免每次时间轴推进都触发歌词墙重新排布。
+  const lyricLines = useMemo(() => song?.lines.filter((l) => !l.instrumental && l.lyrics.trim() !== '') ?? [], [song]);
 
   if (!song || lyricLines.length === 0) {
     return (
@@ -41,6 +43,9 @@ export function LyricsStage({ song, activeIndex, title, context = 2, variant = '
     else break;
   }
 
+  if (variant === 'wall') {
+    return <LyricWallStage lyricLines={lyricLines} activeIndex={lyricLines[activePos]?.index ?? -1} font={font} />;
+  }
   if (variant === 'curtain') {
     return (
       <CurtainStage

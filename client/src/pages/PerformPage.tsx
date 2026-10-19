@@ -245,11 +245,12 @@ export function PerformPage() {
             <span>跟随进度</span>
             <button
               className={`btn ${state.follow ? 'btn--primary' : ''}`}
+              disabled={state.stageStyle === 'wall'}
               onClick={() => send({ follow: !state.follow })}
             >
-              {state.follow ? '开' : '关'}
+              {state.stageStyle === 'wall' || state.follow ? '开' : '关'}
             </button>
-            <span className="tools__hint">开启后高亮当前唱到的一句</span>
+            <span className="tools__hint">{state.stageStyle === 'wall' ? '歌词墙始终高亮当前句，可手动翻句或按时间轴播放' : '开启后高亮当前唱到的一句'}</span>
           </div>
           <div className="tools__row">
             <span>歌词字体</span>

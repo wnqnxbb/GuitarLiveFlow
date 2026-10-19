@@ -40,13 +40,15 @@ export type ScrollMode = 'manual' | 'auto' | 'timeline';
  * 大屏展示样式：
  * - scroll  逐句滚动（当前句居中放大，前后句变淡）
  * - curtain 门帘全量（整首歌词竖排，一句一列从右往左排开）
+ * - wall    杂乱歌词墙（整首歌词横向打散平铺，始终高亮当前句）
  * 以后加新样式：在这里补 id + 在 LyricsStage 里补渲染即可，手机端选择器会自动出现。
  */
-export type StageStyle = 'scroll' | 'curtain';
+export type StageStyle = 'scroll' | 'curtain' | 'wall';
 
 export const STAGE_STYLES: readonly { id: StageStyle; name: string; desc: string }[] = [
   { id: 'scroll', name: '滚动逐句', desc: '当前一句居中放大，前后几句变淡' },
   { id: 'curtain', name: '门帘全量', desc: '整首歌词竖排，一句一列从右往左排开' },
+  { id: 'wall', name: '杂乱歌词墙', desc: '整首歌词随机横向平铺，位置固定，唱到哪句就亮起哪句' },
 ];
 
 export function isStageStyle(v: unknown): v is StageStyle {
@@ -89,7 +91,7 @@ export interface RoomState {
   transpose: number;
   /** 大屏展示样式，手机端选择后同步给大屏 */
   stageStyle: StageStyle;
-  /** 是否跟随进度：开启后大屏高亮当前唱到的一句并显示进度条，关闭则纯展示 */
+  /** 门帘样式是否高亮当前句；滚动逐句和歌词墙始终跟随当前行号 */
   follow: boolean;
   /** 大屏歌词字体，手机端选择后同步给大屏 */
   font: StageFont;
