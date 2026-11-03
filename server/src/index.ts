@@ -23,7 +23,12 @@ await app.register(fastifyStatic, {
   root: config.uploadsDir,
   prefix: '/uploads/',
   decorateReply: false,
-  maxAge: '7d',
+  maxAge: 0,
+  // 谱子原图可能被管理页替换（或纠正页码后内容变化），7 天强缓存会挡住新版图片；
+  // 与 index.html / fonts 一致改为 no-cache 走 ETag / Last-Modified 校验。
+  setHeaders: (reply) => {
+    reply.header('Cache-Control', 'no-cache');
+  },
 });
 
 await registerRoutes(app);
